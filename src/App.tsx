@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from "@google/genai";
 import { 
@@ -43,7 +43,8 @@ import {
   Bot,
   User,
   Moon,
-  Sun
+  Sun,
+  Quote
 } from 'lucide-react';
 
 // --- Gemini API Setup ---
@@ -321,7 +322,7 @@ const AboutUs = () => {
             <div className="relative rounded-[40px] overflow-hidden shadow-2xl">
               <img 
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=2070" 
-                alt="Our Team" 
+                alt="InomTechs professional team working collaboratively on innovative technology solutions" 
                 className="w-full h-[500px] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -434,7 +435,7 @@ const Hero = () => {
             <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl">
               <img 
                 src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=2072" 
-                alt="Workspace" 
+                alt="Modern technology workspace representing InomTechs digital development environment" 
                 className="w-full h-auto object-cover"
               />
             </div>
@@ -553,54 +554,74 @@ const Services = () => {
 };
 
 const Projects = () => {
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+
   const projects = [
     {
       title: "OMRAH",
       category: "Tourism Solution",
       image: "https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&q=80&w=2070",
-      desc: "An application and website serving tourists interested in visiting the Kingdom of Saudi Arabia. Challenge: Handling peak season traffic spikes. Solution: Implemented elastic cloud scaling and optimized CDN delivery to ensure zero downtime during Hajj and Umrah."
+      desc: "An application and website serving tourists interested in visiting the Kingdom of Saudi Arabia. Challenge: Handling peak season traffic spikes. Solution: Implemented elastic cloud scaling and optimized CDN delivery to ensure zero downtime during Hajj and Umrah.",
+      technologies: ["React", "FastAPI", "Cloudflare", "ElasticSearch"],
+      testimonial: {
+        author: "Ahmed Al-Farsi",
+        text: "The scalability InomTechs delivered for OMRAH during peak season was phenomenal. Our users experienced zero lag."
+      }
     },
     {
       title: "TAJ Platform",
       category: "Marketing & Design",
       image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=2070",
-      desc: "Integrated platform for marketing and website design. Challenge: Diverse branding needs for small businesses. Solution: Created a modular 'drag-and-drop' component library that allows non-technical owners to build a professional-grade online presence."
+      desc: "Integrated platform for marketing and website design. Challenge: Diverse branding needs for small businesses. Solution: Created a modular 'drag-and-drop' component library that allows non-technical owners to build a professional-grade online presence.",
+      technologies: ["Next.js", "Tailwind CSS", "PostgreSQL", "Firebase"],
+      testimonial: {
+        author: "Meera Nair",
+        text: "The TAJ Platform gave our craft business a professional edge that we couldn't have achieved ourselves."
+      }
     },
     {
       title: "Alyoumlandmark",
       category: "Agri-Export",
       image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&q=80&w=2044",
-      desc: "Exports agricultural crops like fruits and vegetables. Challenge: Real-time supply chain transparency. Solution: Integrated a blockchain-based tracking system to provide buyers with verifiable data on produce origin and quality."
+      desc: "Exports agricultural crops like fruits and vegetables. Challenge: Real-time supply chain transparency. Solution: Integrated a blockchain-based tracking system to provide buyers with verifiable data on produce origin and quality.",
+      technologies: ["Hyperledger Fabric", "Node.js", "IoT Sensors", "React Native"],
+      testimonial: {
+        author: "Samir Gupta",
+        text: "Transparency is key in exports. The blockchain solution from InomTechs has built massive trust with our EU buyers."
+      }
     },
     {
       title: "Inovent VR",
       category: "Virtual Reality",
       image: "https://images.unsplash.com/photo-1478416272538-5f7e51dc5400?auto=format&fit=crop&q=80&w=2070",
-      desc: "Holds exhibitions and conferences remotely in VR. Challenge: High latency on low-bandwidth networks. Solution: Developed a progressive rendering engine that delivers immersive 360-degree experiences even in areas with limited internet speeds."
+      desc: "Holds exhibitions and conferences remotely in VR. Challenge: High latency on low-bandwidth networks. Solution: Developed a progressive rendering engine that delivers immersive 360-degree experiences even in areas with limited internet speeds.",
+      technologies: ["Unity 3D", "WebXR", "WebRTC", "Socket.io"],
+      testimonial: {
+        author: "Elena Petrova",
+        text: "Inovent's VR quality is unmatched. Even with moderate speeds, the immersion is seamless."
+      }
     },
     {
       title: "Educhains",
       category: "Education",
       image: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=1974",
-      desc: "Educational platform for students and employees. Challenge: Low student engagement in remote models. Solution: Introduced gamified learning paths and automated peer-to-peer assessment modules to drive higher completion rates."
+      desc: "Educational platform for students and employees. Challenge: Low student engagement in remote models. Solution: Introduced gamified learning paths and automated peer-to-peer assessment modules to drive higher completion rates.",
+      technologies: ["LMS architecture", "Python", "React", "AWS Lambda"],
+      testimonial: {
+        author: "Professor Marcus",
+        text: "Completion rates jumped by 40% after we implemented InomTech's gamified learning module."
+      }
     },
     {
       title: "HASAD",
       category: "Agri-Tech",
       image: "https://images.unsplash.com/photo-1495539406979-bf61750d38ad?auto=format&fit=crop&q=80&w=2070",
-      desc: "Links farmers to market statistics. Challenge: Complex data visualization for non-experts. Solution: Designed a simplified 'traffic-light' decision logic that tells farmers exactly when to sell based on predictive market analytics."
-    },
-    {
-      title: "Learnadora",
-      category: "Kids Coding",
-      image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&q=80&w=2069",
-      desc: "Teaching programming to children. Challenge: Abstract concepts being too difficult. Solution: Developed a block-based visual coding environment coupled with interactive storyboards to make logic concepts intuitive for young learners."
-    },
-    {
-      title: "Eco+ Car Care",
-      category: "Service App",
-      image: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&q=80&w=2062",
-      desc: "Comprehensive car care services. Challenge: Inefficient technician dispatching. Solution: Built an AI-driven smart-scheduler that optimizes routes and technician allocation based on real-time traffic and service duration."
+      desc: "Links farmers to market statistics. Challenge: Complex data visualization for non-experts. Solution: Designed a simplified 'traffic-light' decision logic that tells farmers exactly when to sell based on predictive market analytics.",
+      technologies: ["Data Science", "React", "D3.js", "Serverless"],
+      testimonial: {
+        author: "Farmer Gopal",
+        text: "The simple red/green lights tell me exactly when to sell my crop. My profits are up significantly."
+      }
     }
   ];
 
@@ -622,7 +643,8 @@ const Projects = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
-              className="group relative rounded-3xl overflow-hidden shadow-md bg-white dark:bg-gray-900 h-96"
+              className="group relative rounded-3xl overflow-hidden shadow-md bg-white dark:bg-gray-900 h-96 cursor-pointer"
+              onClick={() => setSelectedProject(project)}
             >
               <div className="h-full overflow-hidden">
                 <img 
@@ -632,16 +654,127 @@ const Projects = () => {
                 />
               </div>
               <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent text-white translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
-                <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">{project.category}</p>
-                <h3 className="text-xl font-bold mb-2">{project.title}</h3>
-                <p className="text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-3">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">{project.category}</p>
+                    <h3 className="text-xl font-bold">{project.title}</h3>
+                  </div>
+                  <button className="bg-orange-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-2 mb-4">
                   {project.desc}
                 </p>
+                <div className="mt-2">
+                  <span className="text-xs font-bold border border-white/30 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm">
+                    View Details
+                  </span>
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedProject && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 sm:pt-20">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProject(null)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative w-full max-w-5xl bg-white dark:bg-gray-900 rounded-[40px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <button 
+                onClick={() => setSelectedProject(null)}
+                className="absolute top-6 right-6 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full backdrop-blur-md transition-all border border-white/20"
+              >
+                <X size={24} />
+              </button>
+
+              <div className="flex flex-col md:flex-row h-full overflow-y-auto">
+                <div className="md:w-5/12 h-64 md:h-auto sticky top-0 md:relative">
+                  <img src={selectedProject.image} alt={selectedProject.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
+                </div>
+                <div className="md:w-7/12 p-8 md:p-14 lg:p-20 overflow-y-auto">
+                  <div className="flex flex-wrap items-center gap-3 mb-6">
+                    <span className="px-4 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-500 rounded-full text-xs font-bold uppercase tracking-widest">
+                      {selectedProject.category}
+                    </span>
+                  </div>
+                  
+                  <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-8 leading-tight">
+                    {selectedProject.title}
+                  </h2>
+                  
+                  <div className="space-y-12">
+                    <section>
+                      <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4">Case Overview</h4>
+                      <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
+                        {selectedProject.desc}
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4">Stack & Tools</h4>
+                      <div className="flex flex-wrap gap-3">
+                        {selectedProject.technologies?.map((tech: string, i: number) => (
+                          <span key={i} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold border border-gray-200 dark:border-gray-700">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+
+                    {selectedProject.testimonial && (
+                      <section className="bg-orange-50 dark:bg-orange-900/10 p-8 md:p-10 rounded-[32px] border border-orange-100 dark:border-orange-900/20">
+                        <div className="text-orange-500 mb-6">
+                          <Quote size={40} fill="currentColor" className="opacity-20" />
+                        </div>
+                        <p className="text-gray-800 dark:text-gray-200 text-xl font-medium mb-6 italic leading-snug">
+                          "{selectedProject.testimonial.text}"
+                        </p>
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold">
+                            {selectedProject.testimonial.author[0]}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900 dark:text-white text-lg">
+                              {selectedProject.testimonial.author}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-500 font-medium">Verify Client Review</p>
+                          </div>
+                        </div>
+                      </section>
+                    )}
+                  </div>
+
+                  <div className="mt-16 flex flex-col sm:flex-row gap-4">
+                    <button className="flex-1 bg-black dark:bg-white text-white dark:text-black hover:bg-orange-600 dark:hover:bg-orange-500 hover:text-white font-bold py-5 rounded-2xl shadow-xl transition-all text-lg">
+                      Explore Case Study
+                    </button>
+                    <button 
+                      onClick={() => setSelectedProject(null)}
+                      className="px-10 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-bold py-5 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-lg"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
@@ -804,6 +937,77 @@ const Products = () => {
   );
 };
 
+// --- Testimonials Component ---
+const Testimonials = () => {
+  const testimonials = [
+    {
+      name: "Rajesh Kumar",
+      company: "Heritage Crafts",
+      role: "CEO",
+      feedback: "InomTechs transformed our small local business into a global brand. Their web development team is professional, responsive, and truly understands the needs of rural entrepreneurs.",
+      image: "https://i.pravatar.cc/150?u=rajesh"
+    },
+    {
+      name: "Sarah Ahmed",
+      company: "EduReach",
+      role: "Founder",
+      feedback: "The educational software built by InomTechs has revolutionized how we teach students in remote areas. Their commitment to social impact through technology is inspiring.",
+      image: "https://i.pravatar.cc/150?u=sarah"
+    },
+    {
+      name: "Amit Singh",
+      company: "AgriExport Solutions",
+      role: "Director",
+      feedback: "Their AR/VR solutions helped our clients visualize agricultural products across continents. It significantly reduced our sales cycle and built immense trust with international buyers.",
+      image: "https://i.pravatar.cc/150?u=amit"
+    }
+  ];
+
+  return (
+    <section id="testimonials" className="py-24 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">Success Stories</p>
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">What Our Clients Say</h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {testimonials.map((t, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 relative group"
+            >
+              <div className="absolute top-6 right-8 text-orange-100 dark:text-orange-900/20 group-hover:text-orange-200 dark:group-hover:text-orange-900/40 transition-colors">
+                <Quote size={64} fill="currentColor" />
+              </div>
+              
+              <div className="flex items-center gap-4 mb-6">
+                <img 
+                  src={t.image} 
+                  alt={t.name} 
+                  className="w-14 h-14 rounded-full border-2 border-orange-500"
+                />
+                <div>
+                  <h4 className="font-bold text-gray-900 dark:text-white">{t.name}</h4>
+                  <p className="text-xs text-orange-600 dark:text-orange-500 font-semibold">{t.role}, {t.company}</p>
+                </div>
+              </div>
+              
+              <p className="text-gray-600 dark:text-gray-400 italic leading-relaxed relative z-10">
+                "{t.feedback}"
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const WhyChooseUs = () => {
   const reasons = [
     {
@@ -850,10 +1054,10 @@ const WhyChooseUs = () => {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-             <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=2071" className="rounded-2xl h-64 w-full object-cover mt-12" alt="Team" />
-             <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=2070" className="rounded-2xl h-64 w-full object-cover" alt="Workshop" />
-             <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=2070" className="rounded-2xl h-64 w-full object-cover mt-4" alt="Success" />
-             <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2015" className="rounded-2xl h-64 w-full object-cover -mt-8" alt="Growth" />
+             <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=2071" className="rounded-2xl h-64 w-full object-cover mt-12" alt="InomTechs creative team collaborating in a modern office environment" />
+             <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=2070" className="rounded-2xl h-64 w-full object-cover" alt="Interactive software workshop for small business owners at InomTechs" />
+             <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=2070" className="rounded-2xl h-64 w-full object-cover mt-4" alt="Successful project completion celebrated by InomTechs developers" />
+             <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2015" className="rounded-2xl h-64 w-full object-cover -mt-8" alt="Data analytics providing insights for business growth and optimization" />
           </div>
         </div>
       </div>
@@ -861,7 +1065,52 @@ const WhyChooseUs = () => {
   );
 };
 
+// --- Request Consultation CTA ---
+const RequestConsultation = () => {
+  return (
+    <section className="py-16 bg-orange-600 dark:bg-orange-700 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 text-white">
+          <div className="text-center md:text-left">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Business?</h2>
+            <p className="text-lg text-orange-100 max-w-xl">
+              Get a free consultation today and discover how our technology solutions can drive your growth.
+            </p>
+          </div>
+          <motion.a
+            href="#contact"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="whitespace-nowrap bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg shadow-2xl hover:bg-orange-50 transition-all flex items-center gap-2"
+          >
+            Request a Consultation <ArrowRight size={22} />
+          </motion.a>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Contact = () => {
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+    setEmailError('');
+    // Handle form submission logic would go here
+    console.log('Form status: Valid email, proceeding with submission');
+  };
+
   return (
     <section id="contact" className="py-24 bg-white dark:bg-black transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -904,15 +1153,25 @@ const Contact = () => {
             </div>
             
             <div className="lg:col-span-3 p-8 lg:p-12">
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-gray-500 ml-1">Full Name</label>
-                    <input type="text" className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="John Doe" />
+                    <input type="text" required className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="John Doe" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-gray-500 ml-1">Email Address</label>
-                    <input type="email" className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="john@example.com" />
+                    <input 
+                      type="email" 
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError('');
+                      }}
+                      className={`w-full bg-white dark:bg-gray-800 border ${emailError ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'} rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors`} 
+                      placeholder="john@example.com" 
+                    />
+                    {emailError && <p className="text-red-500 text-xs mt-1 ml-1 font-bold">{emailError}</p>}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -926,10 +1185,10 @@ const Contact = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-gray-500 ml-1">Your Message</label>
-                  <textarea rows={4} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors resize-none" placeholder="Tell us about your project..."></textarea>
+                  <textarea rows={4} required className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors resize-none" placeholder="Tell us about your project..."></textarea>
                 </div>
-                <button className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 transition-all shadow-lg hover:shadow-orange-200 dark:shadow-none">
-                  Send Message
+                <button type="submit" className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 transition-all shadow-lg hover:shadow-orange-200 dark:shadow-none">
+                   Send Message
                 </button>
               </form>
             </div>
@@ -987,14 +1246,20 @@ export default function App() {
 
   return (
     <div className={`min-h-screen text-gray-900 dark:text-gray-100 dark:bg-gray-950 selection:bg-orange-200 selection:text-orange-900 font-sans transition-colors duration-300`}>
-      <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      <Hero />
-      <AboutUs />
-      <Services />
-      <Projects />
-      <Products />
-      <WhyChooseUs />
-      <Contact />
+      <header>
+        <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+      </header>
+      <main>
+        <Hero />
+        <AboutUs />
+        <Services />
+        <Projects />
+        <Products />
+        <Testimonials />
+        <WhyChooseUs />
+        <RequestConsultation />
+        <Contact />
+      </main>
       <Footer />
       <Chatbot />
     </div>
