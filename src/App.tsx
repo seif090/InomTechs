@@ -30,9 +30,10 @@ import {
   Mail, 
   Phone, 
   MapPin, 
-  Github, 
   Linkedin, 
-  Twitter,
+  Facebook,
+  Instagram,
+  Music,
   ExternalLink,
   Laptop,
   Users,
@@ -66,6 +67,12 @@ About InomTechs:
   - HASAD: Agri-Tech app linking farmers to markets.
   - Learnadora: Kids coding platform.
   - Eco+ Car Care: Comprehensive car service app.
+
+Social Media Links:
+- LinkedIn: https://www.linkedin.com/in/inom-techs-36b25a410
+- TikTok: https://www.tiktok.com/@inom6776?is_from_webapp=1&sender_device=pc
+- Instagram: https://www.instagram.com/inomtechs26/
+- Facebook: https://www.facebook.com/share/189hdW8Ds9/
 
 Tone: Professional, innovative, encouraging, and efficient.
 When asked about deals: Encourage them to leave their contact details in the form or suggest specific service packages based on their needs.
@@ -1170,9 +1177,10 @@ const Contact = () => {
               </div>
 
               <div className="mt-16 pt-8 border-t border-white/10 flex gap-6">
-                <a href="#" className="hover:text-orange-500 transition-colors"><Github size={20} /></a>
-                <a href="#" className="hover:text-orange-500 transition-colors"><Linkedin size={20} /></a>
-                <a href="#" className="hover:text-orange-500 transition-colors"><Twitter size={20} /></a>
+                <a href="https://www.facebook.com/share/189hdW8Ds9/" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors"><Facebook size={20} /></a>
+                <a href="https://www.instagram.com/inomtechs26/" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors"><Instagram size={20} /></a>
+                <a href="https://www.linkedin.com/in/inom-techs-36b25a410" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors"><Linkedin size={20} /></a>
+                <a href="https://www.tiktok.com/@inom6776?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors"><Music size={20} /></a>
               </div>
             </div>
             
@@ -1240,6 +1248,13 @@ const Footer = () => {
             <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{i18n.language === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}</a>
             <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{i18n.language === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}</a>
             <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{i18n.language === 'ar' ? 'الوظائف' : 'Careers'}</a>
+          </div>
+
+          <div className="flex gap-4">
+            <a href="https://www.facebook.com/share/189hdW8Ds9/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors"><Facebook size={18} /></a>
+            <a href="https://www.instagram.com/inomtechs26/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors"><Instagram size={18} /></a>
+            <a href="https://www.linkedin.com/in/inom-techs-36b25a410" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors"><Linkedin size={18} /></a>
+            <a href="https://www.tiktok.com/@inom6776?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors"><Music size={18} /></a>
           </div>
         </div>
       </div>
