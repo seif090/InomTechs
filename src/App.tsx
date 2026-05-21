@@ -80,7 +80,7 @@ If unsure: Ask clarifying questions about their business goals.`;
 
 // --- Components ---
 
-const Chatbot = () => {
+const Chatbot = React.memo(() => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'bot', text: string }[]>([
@@ -147,7 +147,7 @@ const Chatbot = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 z-50 w-[350px] sm:w-[400px] h-[500px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-gray-100 dark:border-gray-800"
+            className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-6 z-50 sm:w-[400px] h-[500px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-gray-100 dark:border-gray-800"
           >
             {/* Header */}
             <div className="bg-black p-4 text-white flex items-center gap-3">
@@ -212,9 +212,9 @@ const Chatbot = () => {
       </AnimatePresence>
     </>
   );
-};
+});
 
-const Navbar = ({ darkMode, toggleDarkMode }: { darkMode: boolean, toggleDarkMode: () => void }) => {
+const Navbar = React.memo(({ darkMode, toggleDarkMode }: { darkMode: boolean, toggleDarkMode: () => void }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { t, i18n } = useTranslation();
@@ -225,8 +225,17 @@ const Navbar = ({ darkMode, toggleDarkMode }: { darkMode: boolean, toggleDarkMod
   };
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 50);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -331,10 +340,10 @@ const Navbar = ({ darkMode, toggleDarkMode }: { darkMode: boolean, toggleDarkMod
       </AnimatePresence>
     </nav>
   );
-};
+});
 
 // --- About Us Component ---
-const AboutUs = () => {
+const AboutUs = React.memo(() => {
   return (
     <section id="about" className="py-24 bg-white dark:bg-black transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -348,9 +357,11 @@ const AboutUs = () => {
           >
             <div className="relative rounded-[40px] overflow-hidden shadow-2xl">
               <img 
-                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=2070" 
-                alt="InomTechs professional team working collaboratively on innovative technology solutions" 
-                className="w-full h-[500px] object-cover"
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=60&w=800" 
+                alt="InomTechs team" 
+                className="w-full h-80 sm:h-[500px] object-cover"
+                loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-8 left-8 right-8">
@@ -407,9 +418,9 @@ const AboutUs = () => {
       </div>
     </section>
   );
-};
+});
 
-const Hero = () => {
+const Hero = React.memo(() => {
   const { t } = useTranslation();
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
@@ -425,7 +436,7 @@ const Hero = () => {
             <span className="inline-block py-1 px-3 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold uppercase tracking-wider mb-6">
               Empowering Small Businesses
             </span>
-            <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] text-gray-900 dark:text-white mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.1] text-gray-900 dark:text-white mb-6">
               {t('welcome')} <span className="text-orange-600">Company.</span>
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-lg leading-relaxed">
@@ -462,9 +473,11 @@ const Hero = () => {
           >
             <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl">
               <img 
-                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=2072" 
+                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=60&w=1200" 
                 alt="Modern technology workspace representing InomTechs digital development environment" 
                 className="w-full h-auto object-cover"
+                loading="eager"
+                decoding="async"
               />
             </div>
             {/* Floating Cards */}
@@ -500,9 +513,9 @@ const Hero = () => {
       </div>
     </section>
   );
-};
+});
 
-const Services = () => {
+const Services = React.memo(() => {
   const { t, i18n } = useTranslation();
   const services = [
     {
@@ -580,16 +593,16 @@ const Services = () => {
       </div>
     </section>
   );
-};
+});
 
-const Projects = () => {
+const Projects = React.memo(() => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const projects = [
     {
       title: "OMRAH",
       category: "Tourism Solution",
-      image: "https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&q=80&w=2070",
+      image: "https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&q=60&w=600",
       desc: "An application and website serving tourists interested in visiting the Kingdom of Saudi Arabia. Challenge: Handling peak season traffic spikes. Solution: Implemented elastic cloud scaling and optimized CDN delivery to ensure zero downtime during Hajj and Umrah.",
       technologies: ["React", "FastAPI", "Cloudflare", "ElasticSearch"],
       testimonial: {
@@ -600,7 +613,7 @@ const Projects = () => {
     {
       title: "TAJ Platform",
       category: "Marketing & Design",
-      image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=2070",
+      image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=60&w=600",
       desc: "Integrated platform for marketing and website design. Challenge: Diverse branding needs for small businesses. Solution: Created a modular 'drag-and-drop' component library that allows non-technical owners to build a professional-grade online presence.",
       technologies: ["Next.js", "Tailwind CSS", "PostgreSQL", "Firebase"],
       testimonial: {
@@ -611,7 +624,7 @@ const Projects = () => {
     {
       title: "Alyoumlandmark",
       category: "Agri-Export",
-      image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&q=80&w=2044",
+      image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&q=60&w=600",
       desc: "Exports agricultural crops like fruits and vegetables. Challenge: Real-time supply chain transparency. Solution: Integrated a blockchain-based tracking system to provide buyers with verifiable data on produce origin and quality.",
       technologies: ["Hyperledger Fabric", "Node.js", "IoT Sensors", "React Native"],
       testimonial: {
@@ -622,7 +635,7 @@ const Projects = () => {
     {
       title: "Inovent VR",
       category: "Virtual Reality",
-      image: "https://images.unsplash.com/photo-1478416272538-5f7e51dc5400?auto=format&fit=crop&q=80&w=2070",
+      image: "https://images.unsplash.com/photo-1478416272538-5f7e51dc5400?auto=format&fit=crop&q=60&w=600",
       desc: "Holds exhibitions and conferences remotely in VR. Challenge: High latency on low-bandwidth networks. Solution: Developed a progressive rendering engine that delivers immersive 360-degree experiences even in areas with limited internet speeds.",
       technologies: ["Unity 3D", "WebXR", "WebRTC", "Socket.io"],
       testimonial: {
@@ -633,7 +646,7 @@ const Projects = () => {
     {
       title: "Educhains",
       category: "Education",
-      image: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=1974",
+      image: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=60&w=600",
       desc: "Educational platform for students and employees. Challenge: Low student engagement in remote models. Solution: Introduced gamified learning paths and automated peer-to-peer assessment modules to drive higher completion rates.",
       technologies: ["LMS architecture", "Python", "React", "AWS Lambda"],
       testimonial: {
@@ -644,7 +657,7 @@ const Projects = () => {
     {
       title: "HASAD",
       category: "Agri-Tech",
-      image: "https://images.unsplash.com/photo-1495539406979-bf61750d38ad?auto=format&fit=crop&q=80&w=2070",
+      image: "https://images.unsplash.com/photo-1495539406979-bf61750d38ad?auto=format&fit=crop&q=60&w=600",
       desc: "Links farmers to market statistics. Challenge: Complex data visualization for non-experts. Solution: Designed a simplified 'traffic-light' decision logic that tells farmers exactly when to sell based on predictive market analytics.",
       technologies: ["Data Science", "React", "D3.js", "Serverless"],
       testimonial: {
@@ -680,6 +693,8 @@ const Projects = () => {
                   src={project.image} 
                   alt={project.title} 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent text-white translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
@@ -720,28 +735,29 @@ const Projects = () => {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative w-full max-w-5xl bg-white dark:bg-gray-900 rounded-[40px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              className="relative w-full max-w-5xl bg-white dark:bg-gray-900 rounded-3xl sm:rounded-[40px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             >
               <button 
                 onClick={() => setSelectedProject(null)}
-                className="absolute top-6 right-6 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full backdrop-blur-md transition-all border border-white/20"
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-3 rounded-full backdrop-blur-md transition-all border border-white/20"
               >
-                <X size={24} />
+                <X size={20} className="sm:hidden" />
+                <X size={24} className="hidden sm:block" />
               </button>
 
               <div className="flex flex-col md:flex-row h-full overflow-y-auto">
-                <div className="md:w-5/12 h-64 md:h-auto sticky top-0 md:relative">
+                <div className="md:w-5/12 h-48 sm:h-64 md:h-auto sticky top-0 md:relative z-0">
                   <img src={selectedProject.image} alt={selectedProject.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
                 </div>
-                <div className="md:w-7/12 p-8 md:p-14 lg:p-20 overflow-y-auto">
+                <div className="md:w-7/12 p-6 sm:p-8 md:p-14 lg:p-20">
                   <div className="flex flex-wrap items-center gap-3 mb-6">
-                    <span className="px-4 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-500 rounded-full text-xs font-bold uppercase tracking-widest">
+                    <span className="px-4 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-500 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest">
                       {selectedProject.category}
                     </span>
                   </div>
                   
-                  <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-8 leading-tight">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 leading-tight">
                     {selectedProject.title}
                   </h2>
                   
@@ -806,9 +822,9 @@ const Projects = () => {
       </AnimatePresence>
     </section>
   );
-};
+});
 
-const AnalyticsChart = () => {
+const AnalyticsChart = React.memo(() => {
   const data = useMemo(() => [
     { name: 'Jan', value: 400 },
     { name: 'Feb', value: 300 },
@@ -819,16 +835,16 @@ const AnalyticsChart = () => {
   ], []);
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 h-[400px] w-full border border-orange-100 dark:border-gray-800 relative overflow-hidden group transition-colors duration-300">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-4 sm:p-6 h-[300px] sm:h-[400px] w-full border border-orange-100 dark:border-gray-800 relative overflow-hidden group transition-colors duration-300">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-orange-300" />
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
         <div>
-          <h5 className="font-bold text-gray-900 dark:text-white">Production Velocity</h5>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Live System Metrics</p>
+          <h5 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">Production Velocity</h5>
+          <p className="text-[8px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-wider">Live System Metrics</p>
         </div>
         <div className="flex gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-[10px] font-bold text-green-600 uppercase">Active</span>
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-[8px] sm:text-[10px] font-bold text-green-600 uppercase">Active</span>
         </div>
       </div>
       
@@ -889,9 +905,9 @@ const AnalyticsChart = () => {
       </div>
     </div>
   );
-};
+});
 
-const Products = () => {
+const Products = React.memo(() => {
   const products = [
     {
       name: "Multilingual eCommerce",
@@ -964,10 +980,10 @@ const Products = () => {
       </div>
     </section>
   );
-};
+});
 
 // --- Testimonials Component ---
-const Testimonials = () => {
+const Testimonials = React.memo(() => {
   const testimonials = [
     {
       name: "Rajesh Kumar",
@@ -1019,6 +1035,8 @@ const Testimonials = () => {
                   src={t.image} 
                   alt={t.name} 
                   className="w-14 h-14 rounded-full border-2 border-orange-500"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div>
                   <h4 className="font-bold text-gray-900 dark:text-white">{t.name}</h4>
@@ -1035,9 +1053,9 @@ const Testimonials = () => {
       </div>
     </section>
   );
-};
+});
 
-const WhyChooseUs = () => {
+const WhyChooseUs = React.memo(() => {
   const reasons = [
     {
       title: "Passionate",
@@ -1083,19 +1101,19 @@ const WhyChooseUs = () => {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-             <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=2071" className="rounded-2xl h-64 w-full object-cover mt-12" alt="InomTechs creative team collaborating in a modern office environment" />
-             <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=2070" className="rounded-2xl h-64 w-full object-cover" alt="Interactive software workshop for small business owners at InomTechs" />
-             <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=2070" className="rounded-2xl h-64 w-full object-cover mt-4" alt="Successful project completion celebrated by InomTechs developers" />
-             <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2015" className="rounded-2xl h-64 w-full object-cover -mt-8" alt="Data analytics providing insights for business growth and optimization" />
+             <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=60&w=400" className="rounded-2xl h-48 sm:h-64 w-full object-cover sm:mt-12" alt="InomTechs creative team" loading="lazy" decoding="async" />
+             <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=60&w=400" className="rounded-2xl h-48 sm:h-64 w-full object-cover" alt="Interactive software workshop" loading="lazy" decoding="async" />
+             <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=60&w=400" className="rounded-2xl h-48 sm:h-64 w-full object-cover sm:mt-4" alt="Successful project completion" loading="lazy" decoding="async" />
+             <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=60&w=400" className="rounded-2xl h-48 sm:h-64 w-full object-cover sm:-mt-8" alt="Data analytics" loading="lazy" decoding="async" />
           </div>
         </div>
       </div>
     </section>
   );
-};
+});
 
 // --- Request Consultation CTA ---
-const RequestConsultation = () => {
+const RequestConsultation = React.memo(() => {
   const { t, i18n } = useTranslation();
   return (
     <section className="py-16 bg-orange-600 dark:bg-orange-700 transition-colors duration-300">
@@ -1119,9 +1137,9 @@ const RequestConsultation = () => {
       </div>
     </section>
   );
-};
+});
 
-const Contact = () => {
+const Contact = React.memo(() => {
   const { t, i18n } = useTranslation();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -1229,9 +1247,9 @@ const Contact = () => {
       </div>
     </section>
   );
-};
+});
 
-const Footer = () => {
+const Footer = React.memo(() => {
   const { t, i18n } = useTranslation();
   return (
     <footer className="py-12 bg-white dark:bg-black border-t border-gray-100 dark:border-gray-800 transition-colors duration-300">
@@ -1260,7 +1278,7 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
 
 // --- App ---
 
