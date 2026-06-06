@@ -23,6 +23,7 @@ import {
   Smartphone, 
   GraduationCap, 
   ChevronRight, 
+  ChevronLeft,
   Menu, 
   X, 
   ArrowRight, 
@@ -75,6 +76,7 @@ Social Media Links:
 - Facebook: https://www.facebook.com/share/189hdW8Ds9/
 
 Tone: Professional, innovative, encouraging, and efficient.
+Language: Always respond in the same language the user is using (Arabic or English).
 When asked about deals: Encourage them to leave their contact details in the form or suggest specific service packages based on their needs.
 If unsure: Ask clarifying questions about their business goals.`;
 
@@ -84,7 +86,7 @@ const Chatbot = React.memo(() => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'bot', text: string }[]>([
-    { role: 'bot', text: 'Hello! I am your InomTechs assistant. How can I help you build your business today?' }
+    { role: 'bot', text: t('bot_welcome') }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -196,8 +198,8 @@ const Chatbot = React.memo(() => {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-orange-500 transition-colors dark:text-white"
+                placeholder={t('bot_placeholder')}
+                className="flex-1 bg-gray-50 dark:bg-gray-800 border-0 rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 dark:text-white"
               />
               <button 
                 type="submit"
@@ -383,8 +385,8 @@ const AboutUs = React.memo(() => {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">Our Story</p>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl mb-8">About Us</h2>
+            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('our_story')}</p>
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl mb-8">{t('about')}</h2>
             
             <div className="space-y-6 text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
               <p>
@@ -398,11 +400,11 @@ const AboutUs = React.memo(() => {
             <div className="mt-10 grid grid-cols-2 gap-8">
               <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 shadow-sm border border-gray-100 dark:border-gray-800">
                 <h4 className="text-3xl font-bold text-orange-600 dark:text-orange-500 mb-1">50+</h4>
-                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expert Developers</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('expert_developers')}</p>
               </div>
               <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 shadow-sm border border-gray-100 dark:border-gray-800">
                 <h4 className="text-3xl font-bold text-orange-600 dark:text-orange-500 mb-1">2014+</h4>
-                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Years of Excellence</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('years_excellence')}</p>
               </div>
             </div>
 
@@ -411,7 +413,7 @@ const AboutUs = React.memo(() => {
               whileTap={{ scale: 0.95 }}
               className="mt-12 bg-black dark:bg-orange-600 text-white px-8 py-4 rounded-full font-bold shadow-xl flex items-center gap-2 group transition-all"
             >
-              Explore Mission <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              {t('explore_mission')} <ArrowRight size={20} className={`${i18n.language === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} />
             </motion.button>
           </motion.div>
         </div>
@@ -434,13 +436,13 @@ const Hero = React.memo(() => {
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <span className="inline-block py-1 px-3 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold uppercase tracking-wider mb-6">
-              Empowering Small Businesses
+              {t('empowering_small_businesses')}
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.1] text-gray-900 dark:text-white mb-6">
               {t('welcome')} <span className="text-orange-600">Company.</span>
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-lg leading-relaxed">
-              We are thrilled to welcome you to Inomtechs, where innovation meets limitless possibilities in the world of technology. Today, we want to take a few moments to introduce you to our company and the incredible journey we're on.
+              {t('welcome_desc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button className="bg-black dark:bg-orange-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-orange-600 dark:hover:bg-orange-700 transition-all flex items-center justify-center gap-2 group shadow-xl hover:shadow-orange-200">
@@ -519,43 +521,43 @@ const Services = React.memo(() => {
   const { t, i18n } = useTranslation();
   const services = [
     {
-      title: i18n.language === 'ar' ? 'أمن المعلومات' : "IT Security",
-      desc: i18n.language === 'ar' ? 'حلول قوية للأمن السيبراني لحماية أصولك الرقمية وضمان استمرارية الأعمال.' : "Robust cybersecurity solutions to protect your digital assets and ensure business continuity.",
+      title: t('service_security_title'),
+      desc: t('service_security_desc'),
       icon: <ShieldCheck size={32} />,
-      lightColor: "bg-red-50 dark:bg-red-900/20",
-      textColor: "text-red-600 dark:text-red-400"
+      lightColor: "bg-orange-50 dark:bg-orange-900/20",
+      textColor: "text-orange-600 dark:text-orange-400"
     },
     {
-      title: i18n.language === 'ar' ? 'تصميم واجهة وتجربة المستخدم' : "UI/UX Design",
-      desc: i18n.language === 'ar' ? 'تصميم واجهات مستخدم بديهية وجذابة توفر تجارب رقمية سلسة.' : "Crafting intuitive and engaging user interfaces that provide seamless digital experiences.",
+      title: t('service_uiux_title'),
+      desc: t('service_uiux_desc'),
       icon: <Users size={32} />,
       lightColor: "bg-purple-50 dark:bg-purple-900/20",
       textColor: "text-purple-600 dark:text-purple-400"
     },
     {
-      title: i18n.language === 'ar' ? 'تطوير المواقع' : "Web Development",
-      desc: i18n.language === 'ar' ? 'بناء مواقع إلكترونية سريعة الاستجابة وعالية الأداء مصممة خصيصاً لأهداف عملك.' : "Building high-performance, responsive websites tailored to your specific business goals.",
+      title: t('service_web_title'),
+      desc: t('service_web_desc'),
       icon: <Laptop size={32} />,
       lightColor: "bg-orange-50 dark:bg-orange-900/20",
       textColor: "text-orange-600 dark:text-orange-400"
     },
     {
-      title: i18n.language === 'ar' ? 'تطوير التطبيقات' : "App Development",
-      desc: i18n.language === 'ar' ? 'تطوير تطبيقات الهاتف المحمول للهواتف الذكية التي تربطك بمستخدميك.' : "Developing native and cross-platform mobile applications that connect you with your users.",
+      title: t('service_app_title'),
+      desc: t('service_app_desc'),
       icon: <Smartphone size={32} />,
       lightColor: "bg-green-50 dark:bg-green-900/20",
       textColor: "text-green-600 dark:text-green-400"
     },
     {
-      title: i18n.language === 'ar' ? 'حلول الواقع الافتراضي والمعزز' : "AR/VR Solutions",
-      desc: i18n.language === 'ar' ? 'تجارب واقع معزز وافتراضي غامرة للتسويق والتدريب والمعارض.' : "Immersive augmented and virtual reality experiences for marketing, training, and exhibitions.",
+      title: t('service_arvr_title'),
+      desc: t('service_arvr_desc'),
       icon: <Code size={32} />,
       lightColor: "bg-blue-50 dark:bg-blue-900/20",
       textColor: "text-blue-600 dark:text-blue-400"
     },
     {
-      title: i18n.language === 'ar' ? 'التسويق الرقمي' : "Marketing",
-      desc: i18n.language === 'ar' ? 'خدمات التسويق الرقمي الاستراتيجية لتعزيز تواجدك عبر الإنترنت والوصول إلى جمهورك المستهدف.' : "Strategic digital marketing services to enhance your online presence and reach your target audience.",
+      title: t('service_marketing_title'),
+      desc: t('service_marketing_desc'),
       icon: <ExternalLink size={32} />,
       lightColor: "bg-yellow-50 dark:bg-yellow-900/20",
       textColor: "text-yellow-600 dark:text-yellow-400"
@@ -585,7 +587,7 @@ const Services = React.memo(() => {
                 {service.desc}
               </p>
               <a href="#" className={`text-sm font-bold flex items-center gap-2 ${service.textColor} group-hover:underline underline-offset-4`}>
-                {i18n.language === 'ar' ? 'اقرأ المزيد' : 'Learn More'} {i18n.language === 'ar' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                {t('learn_more')} {i18n.language === 'ar' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
               </a>
             </motion.div>
           ))}
@@ -596,14 +598,15 @@ const Services = React.memo(() => {
 });
 
 const Projects = React.memo(() => {
+  const { t } = useTranslation();
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const projects = [
     {
       title: "OMRAH",
-      category: "Tourism Solution",
+      category: t('project_omrah_cat'),
       image: "https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&q=60&w=600",
-      desc: "An application and website serving tourists interested in visiting the Kingdom of Saudi Arabia. Challenge: Handling peak season traffic spikes. Solution: Implemented elastic cloud scaling and optimized CDN delivery to ensure zero downtime during Hajj and Umrah.",
+      desc: t('project_omrah_desc'),
       technologies: ["React", "FastAPI", "Cloudflare", "ElasticSearch"],
       testimonial: {
         author: "Ahmed Al-Farsi",
@@ -612,9 +615,9 @@ const Projects = React.memo(() => {
     },
     {
       title: "TAJ Platform",
-      category: "Marketing & Design",
+      category: t('project_taj_cat'),
       image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=60&w=600",
-      desc: "Integrated platform for marketing and website design. Challenge: Diverse branding needs for small businesses. Solution: Created a modular 'drag-and-drop' component library that allows non-technical owners to build a professional-grade online presence.",
+      desc: t('project_taj_desc'),
       technologies: ["Next.js", "Tailwind CSS", "PostgreSQL", "Firebase"],
       testimonial: {
         author: "Meera Nair",
@@ -623,9 +626,9 @@ const Projects = React.memo(() => {
     },
     {
       title: "Alyoumlandmark",
-      category: "Agri-Export",
+      category: t('project_alyoum_cat'),
       image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&q=60&w=600",
-      desc: "Exports agricultural crops like fruits and vegetables. Challenge: Real-time supply chain transparency. Solution: Integrated a blockchain-based tracking system to provide buyers with verifiable data on produce origin and quality.",
+      desc: t('project_alyoum_desc'),
       technologies: ["Hyperledger Fabric", "Node.js", "IoT Sensors", "React Native"],
       testimonial: {
         author: "Samir Gupta",
@@ -634,9 +637,9 @@ const Projects = React.memo(() => {
     },
     {
       title: "Inovent VR",
-      category: "Virtual Reality",
+      category: t('project_inovent_cat'),
       image: "https://images.unsplash.com/photo-1478416272538-5f7e51dc5400?auto=format&fit=crop&q=60&w=600",
-      desc: "Holds exhibitions and conferences remotely in VR. Challenge: High latency on low-bandwidth networks. Solution: Developed a progressive rendering engine that delivers immersive 360-degree experiences even in areas with limited internet speeds.",
+      desc: t('project_inovent_desc'),
       technologies: ["Unity 3D", "WebXR", "WebRTC", "Socket.io"],
       testimonial: {
         author: "Elena Petrova",
@@ -645,9 +648,9 @@ const Projects = React.memo(() => {
     },
     {
       title: "Educhains",
-      category: "Education",
+      category: t('project_educhains_cat'),
       image: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=60&w=600",
-      desc: "Educational platform for students and employees. Challenge: Low student engagement in remote models. Solution: Introduced gamified learning paths and automated peer-to-peer assessment modules to drive higher completion rates.",
+      desc: t('project_educhains_desc'),
       technologies: ["LMS architecture", "Python", "React", "AWS Lambda"],
       testimonial: {
         author: "Professor Marcus",
@@ -656,9 +659,9 @@ const Projects = React.memo(() => {
     },
     {
       title: "HASAD",
-      category: "Agri-Tech",
+      category: t('project_hasad_cat'),
       image: "https://images.unsplash.com/photo-1495539406979-bf61750d38ad?auto=format&fit=crop&q=60&w=600",
-      desc: "Links farmers to market statistics. Challenge: Complex data visualization for non-experts. Solution: Designed a simplified 'traffic-light' decision logic that tells farmers exactly when to sell based on predictive market analytics.",
+      desc: t('project_hasad_desc'),
       technologies: ["Data Science", "React", "D3.js", "Serverless"],
       testimonial: {
         author: "Farmer Gopal",
@@ -672,8 +675,8 @@ const Projects = React.memo(() => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
           <div>
-            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">Our Portfolio</p>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">Successful Projects</h2>
+            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('our_portfolio')}</p>
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">{t('successful_projects')}</h2>
           </div>
         </div>
 
@@ -712,7 +715,7 @@ const Projects = React.memo(() => {
                 </p>
                 <div className="mt-2">
                   <span className="text-xs font-bold border border-white/30 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm">
-                    View Details
+                    {t('view_details')}
                   </span>
                 </div>
               </div>
@@ -763,7 +766,7 @@ const Projects = React.memo(() => {
                   
                   <div className="space-y-12">
                     <section>
-                      <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4">Case Overview</h4>
+                      <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4">{t('case_overview')}</h4>
                       <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
                         {selectedProject.desc}
                       </p>
@@ -908,6 +911,7 @@ const AnalyticsChart = React.memo(() => {
 });
 
 const Products = React.memo(() => {
+  const { t } = useTranslation();
   const products = [
     {
       name: "Multilingual eCommerce",
@@ -940,8 +944,8 @@ const Products = React.memo(() => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">Our Offerings</p>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl mb-8">Proprietary Products</h2>
+            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('our_offerings')}</p>
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl mb-8">{t('proprietary_products')}</h2>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 leading-relaxed italic border-l-4 border-orange-500 pl-6">
               "Technology should be accessible to everyone, regardless of their location or bandwidth. Our products are built with this core philosophy."
             </p>
@@ -984,26 +988,27 @@ const Products = React.memo(() => {
 
 // --- Testimonials Component ---
 const Testimonials = React.memo(() => {
+  const { t } = useTranslation();
   const testimonials = [
     {
       name: "Rajesh Kumar",
       company: "Heritage Crafts",
       role: "CEO",
-      feedback: "InomTechs transformed our small local business into a global brand. Their web development team is professional, responsive, and truly understands the needs of rural entrepreneurs.",
+      feedback: t('testimonial_rajesh'),
       image: "https://i.pravatar.cc/150?u=rajesh"
     },
     {
       name: "Sarah Ahmed",
       company: "EduReach",
       role: "Founder",
-      feedback: "The educational software built by InomTechs has revolutionized how we teach students in remote areas. Their commitment to social impact through technology is inspiring.",
+      feedback: t('testimonial_sarah'),
       image: "https://i.pravatar.cc/150?u=sarah"
     },
     {
       name: "Amit Singh",
       company: "AgriExport Solutions",
       role: "Director",
-      feedback: "Their AR/VR solutions helped our clients visualize agricultural products across continents. It significantly reduced our sales cycle and built immense trust with international buyers.",
+      feedback: t('testimonial_amit'),
       image: "https://i.pravatar.cc/150?u=amit"
     }
   ];
@@ -1012,8 +1017,8 @@ const Testimonials = React.memo(() => {
     <section id="testimonials" className="py-24 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">Success Stories</p>
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">What Our Clients Say</h2>
+          <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('success_stories')}</p>
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">{t('what_clients_say')}</h2>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -1152,7 +1157,7 @@ const Contact = React.memo(() => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) {
-      setEmailError(i18n.language === 'ar' ? 'يرجى إدخال بريد إلكتروني صحيح.' : 'Please enter a valid email address.');
+      setEmailError(t('contact_email_valid'));
       return;
     }
     setEmailError('');
@@ -1168,7 +1173,7 @@ const Contact = React.memo(() => {
             <div className="lg:col-span-2 bg-black dark:bg-gray-900 p-8 lg:p-12 text-white">
               <h3 className="text-3xl font-bold mb-8">{t('get_in_touch')}</h3>
               <p className="text-gray-400 mb-12">
-                {i18n.language === 'ar' ? 'هل لديك مشروع في بالك أو تريد معرفة المزيد عن برامجنا التعليمية؟ نحن هنا للمساعدة.' : "Have a project in mind or want to learn more about our education programs? We're here to help."}
+                {t('contact_help_text')}
               </p>
               
               <div className="space-y-8">
@@ -1177,7 +1182,7 @@ const Contact = React.memo(() => {
                     <Mail size={18} className="text-orange-500" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">{i18n.language === 'ar' ? 'راسلنا' : 'Email Us'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">{t('email_us')}</p>
                     <p className="font-medium">info@inomtechs.com</p>
                   </div>
                 </div>
@@ -1187,7 +1192,7 @@ const Contact = React.memo(() => {
                     <Phone size={18} className="text-orange-500" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">{i18n.language === 'ar' ? 'اتصل بنا' : 'Call Us'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">{t('call_us')}</p>
                     <p className="font-medium">+201556783315</p>
                   </div>
                 </div>
@@ -1207,7 +1212,7 @@ const Contact = React.memo(() => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-gray-500 ml-1">{t('full_name')}</label>
-                    <input type="text" required className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder={i18n.language === 'ar' ? 'أحمد محمد' : "John Doe"} />
+                    <input type="text" required className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder={t('contact_placeholder_name')} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-gray-500 ml-1">{t('email_address')}</label>
@@ -1227,15 +1232,15 @@ const Contact = React.memo(() => {
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-gray-500 ml-1">{t('service_required')}</label>
                   <select className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none">
-                    <option>{i18n.language === 'ar' ? 'تطوير المواقع' : 'Web Development'}</option>
-                    <option>{i18n.language === 'ar' ? 'تطوير التطبيقات' : 'App Development'}</option>
-                    <option>{i18n.language === 'ar' ? 'التعليم / التدريب' : 'Education / Training'}</option>
-                    <option>{i18n.language === 'ar' ? 'استفسارات المنتجات' : 'Product Inquiries'}</option>
+                    <option>{t('service_web_title')}</option>
+                    <option>{t('service_app_title')}</option>
+                    <option>{t('education_training')}</option>
+                    <option>{t('product_inquiries')}</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-gray-500 ml-1">{t('your_message')}</label>
-                  <textarea rows={4} required className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors resize-none" placeholder={i18n.language === 'ar' ? 'أخبرنا عن مشروعك...' : "Tell us about your project..."}></textarea>
+                  <textarea rows={4} required className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors resize-none" placeholder={t('contact_placeholder_msg')}></textarea>
                 </div>
                 <button type="submit" className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 transition-all shadow-lg hover:shadow-orange-200 dark:shadow-none">
                    {t('send_message')}
@@ -1263,9 +1268,9 @@ const Footer = React.memo(() => {
           </div>
           
           <div className={`flex gap-8 text-sm font-medium text-gray-600 dark:text-gray-400 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{i18n.language === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}</a>
-            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{i18n.language === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}</a>
-            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{i18n.language === 'ar' ? 'الوظائف' : 'Careers'}</a>
+            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{t('privacy_policy')}</a>
+            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{t('terms_conditions')}</a>
+            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{t('careers')}</a>
           </div>
 
           <div className="flex gap-4">
