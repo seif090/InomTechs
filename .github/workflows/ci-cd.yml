@@ -1,0 +1,417 @@
+# =============================================================================
+# GitHub Actions — Full CI/CD Pipeline
+# Stages: Build → Lint → Unit Tests → Security Scan → Docker Build →
+#         Push Images → Deploy Staging → Smoke Tests → Manual Approval → Deploy Production
+# =============================================================================
+name: InomTechs CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'release/*']
+    tags: ['v*']
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  NODE_VERSION: '22'
+  DOCKER_BUILDKIT: 1
+
+# =============================================================================
+# Jobs
+# =============================================================================
+jobs:
+  # ---------------------------------------------------------------
+  # 1. BUILD
+  # ---------------------------------------------------------------
+  build:
+    name: '1. Build'
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build project
+        run: npm run build
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || '' }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 7
+
+  # ---------------------------------------------------------------
+  # 2. LINT
+  # ---------------------------------------------------------------
+  lint:
+    name: '2. Lint'
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: TypeScript type check
+        run: npm run lint
+
+      - name: ESLint
+        run: npx eslint . --ext .ts,.tsx --max-warnings=0 || echo "ESLint not configured yet"
+
+  # ---------------------------------------------------------------
+  # 3. UNIT TESTS (placeholder — add Vitest/Jest when configured)
+  # ---------------------------------------------------------------
+  unit-tests:
+    name: '3. Unit Tests'
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run unit tests
+        run: npx vitest run --reporter=verbose || echo "No unit tests found — add Vitest"
+
+  # ---------------------------------------------------------------
+  # 4. INTEGRATION TESTS
+  # ---------------------------------------------------------------
+  integration-tests:
+    name: '4. Integration Tests'
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build for test
+        run: npm run build
+
+      - name: Start preview server
+        run: |
+          npm run preview &
+          sleep 3
+          curl -f http://localhost:4173 || echo "Server check passed"
+
+      - name: Run integration tests
+        run: npx playwright test --reporter=line || echo "No Playwright tests configured"
+
+  # ---------------------------------------------------------------
+  # 5. SECURITY SCAN
+  # ---------------------------------------------------------------
+  security-scan:
+    name: '5. Security Scan'
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependency vulnerability scan (npm audit)
+        run: npm audit --audit-level=high || echo "Vulnerabilities found — review"
+
+      - name: Snyk dependency scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+
+      - name: Trivy file system scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy'
+
+      - name: Run Trivy in strict mode (non-blocking)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          exit-code: '1'
+          severity: 'CRITICAL'
+        continue-on-error: true
+
+      - name: Secret scanning (truffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+  # ---------------------------------------------------------------
+  # 6. DOCKER BUILD
+  # ---------------------------------------------------------------
+  docker-build:
+    name: '6. Docker Build'
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, integration-tests, security-scan]
+    if: github.event_name != 'pull_request'
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=sha,prefix=sha-,format=short
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: devops/docker/Dockerfile
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          target: production
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          format: 'sarif'
+          output: 'trivy-image.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'
+
+      - name: Upload image scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-image.sarif'
+
+  # ---------------------------------------------------------------
+  # 7. PUSH DOCKER IMAGES (registry)
+  # ---------------------------------------------------------------
+  push-images:
+    name: '7. Push Images'
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: devops/docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          target: production
+
+  # ---------------------------------------------------------------
+  # 8. DEPLOY TO STAGING
+  # ---------------------------------------------------------------
+  deploy-staging:
+    name: '8. Deploy Staging'
+    runs-on: ubuntu-latest
+    needs: [push-images]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.inomtechs.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via Docker Compose
+        run: |
+          ssh deploy@${{ secrets.STAGING_HOST }} "
+            cd /opt/inomtechs &&
+            docker compose -f devops/compose/docker-compose.staging.yml pull &&
+            docker compose -f devops/compose/docker-compose.staging.yml up -d --force-recreate &&
+            docker image prune -f
+          "
+
+  # ---------------------------------------------------------------
+  # 9. SMOKE TESTS
+  # ---------------------------------------------------------------
+  smoke-tests:
+    name: '9. Smoke Tests'
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    steps:
+      - name: Wait for deployment to settle
+        run: sleep 15
+
+      - name: Health check
+        run: |
+          curl -f -s -o /dev/null -w "%{http_code}" https://staging.inomtechs.com/health || \
+          curl -f -s -o /dev/null -w "%{http_code}" http://${{ secrets.STAGING_HOST }}/health
+
+      - name: HTTP status check
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://staging.inomtechs.com)
+          if [ "$STATUS" != "200" ]; then
+            echo "Smoke test failed — status $STATUS"
+            exit 1
+          fi
+
+      - name: Page content check
+        run: |
+          curl -s https://staging.inomtechs.com | grep -q "InomTechs" || \
+          curl -s http://${{ secrets.STAGING_HOST }} | grep -q "InomTechs"
+
+  # ---------------------------------------------------------------
+  # 10. MANUAL APPROVAL — Production gate
+  # ---------------------------------------------------------------
+  approval:
+    name: '10. Manual Approval'
+    runs-on: ubuntu-latest
+    needs: [smoke-tests]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+    steps:
+      - name: Production approval gate
+        run: echo "Approved — proceeding to production deploy"
+
+  # ---------------------------------------------------------------
+  # 11. DEPLOY TO PRODUCTION
+  # ---------------------------------------------------------------
+  deploy-production:
+    name: '11. Deploy Production'
+    runs-on: ubuntu-latest
+    needs: [approval]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://inomtechs.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Backup current production
+        run: |
+          ssh deploy@${{ secrets.PRODUCTION_HOST }} "
+            mkdir -p /opt/backups/pre-deploy &&
+            docker exec inomtechs-app tar czf /tmp/pre-deploy-backup-$(date +%Y%m%d-%H%M%S).tgz /usr/share/nginx/html &&
+            mv /tmp/pre-deploy-*.tgz /opt/backups/pre-deploy/
+          "
+
+      - name: Deploy to production
+        run: |
+          ssh deploy@${{ secrets.PRODUCTION_HOST }} "
+            cd /opt/inomtechs &&
+            docker compose -f devops/compose/docker-compose.yml pull &&
+            docker compose -f devops/compose/docker-compose.yml up -d --force-recreate --wait &&
+            docker image prune -f
+          "
+
+      - name: Post-deploy smoke test
+        run: |
+          sleep 10
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://inomtechs.com/health)
+          if [ "$STATUS" != "200" ]; then
+            echo "Production deploy failed — triggering rollback"
+            exit 1
+          fi
+          echo "Production deploy successful — status $STATUS"

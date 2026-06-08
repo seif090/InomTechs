@@ -1,0 +1,32 @@
+# =============================================================================
+# docker-compose.dev.yml — Local development overlay
+# =============================================================================
+services:
+  app-dev:
+    build:
+      context: ..
+      dockerfile: devops/docker/Dockerfile.dev
+    container_name: inomtechs-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env.development
+    volumes:
+      - ../src:/app/src
+      - ../public:/app/public
+      - ../index.html:/app/index.html
+      - ../vite.config.ts:/app/vite.config.ts
+      - ../tsconfig.json:/app/tsconfig.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge

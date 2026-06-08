@@ -1,0 +1,82 @@
+# =============================================================================
+# docker-compose.yml — Production base
+# =============================================================================
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: devops/docker/Dockerfile
+      target: production
+    image: ${REGISTRY:-ghcr.io}/${REPOSITORY:-inomtechs/inomtechs-site}:${TAG:-latest}
+    container_name: inomtechs-app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - ../.env.production
+    volumes:
+      - ssl-certs:/etc/ssl/certs:ro
+      - ssl-private:/etc/ssl/private:ro
+      - nginx-logs:/var/log/nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # Future: Express API backend
+  # api:
+  #   build:
+  #     context: ..
+  #     dockerfile: devops/docker/Dockerfile.api
+  #   image: ${REGISTRY:-ghcr.io}/${REPOSITORY:-inomtechs/inomtechs-api}:${TAG:-latest}
+  #   container_name: inomtechs-api
+  #   restart: unless-stopped
+  #   expose:
+  #     - "3001"
+  #   env_file:
+  #     - ../.env.production
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   networks:
+  #     - frontend
+  #     - backend
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1.0'
+  #         memory: 512M
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+volumes:
+  ssl-certs:
+    driver: local
+  ssl-private:
+    driver: local
+  nginx-logs:
+    driver: local

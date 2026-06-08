@@ -6,3 +6,19 @@ coverage/
 *.log
 .env*
 !.env.example
+!.env.development.example
+!.env.staging.example
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+

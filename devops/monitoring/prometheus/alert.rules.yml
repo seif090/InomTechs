@@ -1,0 +1,98 @@
+# =============================================================================
+# Alert Rules — Production-critical alerts
+# =============================================================================
+groups:
+  - name: node_alerts
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU usage > 80% (instance {{ $labels.instance }})"
+          description: "CPU usage is at {{ $value }}%"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory usage > 85% (instance {{ $labels.instance }})"
+          description: "Memory usage is at {{ $value }}%"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space < 10% (instance {{ $labels.instance }})"
+          description: "Disk usage is at {{ $value }}%"
+
+      - alert: HighDiskIO
+        expr: rate(node_disk_io_time_seconds_total[1m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk I/O (instance {{ $labels.instance }})"
+
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.instance }} is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute."
+
+      - alert: HighNetworkTraffic
+        expr: rate(node_network_receive_bytes_total[5m]) > 1e8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High network traffic (instance {{ $labels.instance }})"
+
+  - name: http_alerts
+    interval: 30s
+    rules:
+      - alert: High5xxRate
+        expr: rate(nginx_http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx error rate > 5%"
+          description: "5xx rate is at {{ $value }} requests/sec"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(nginx_http_request_duration_seconds_bucket[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 response time > 3s"
+          description: "P95 response time is {{ $value }}s"
+
+      - alert: LowRequestRate
+        expr: rate(nginx_http_requests_total[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Request rate < 0.1/sec — possible outage"
+
+  - name: application_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorLogRate
+        expr: rate({job="nginx"} |= "error"[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error log rate"

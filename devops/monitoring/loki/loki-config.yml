@@ -1,0 +1,67 @@
+# Loki configuration
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+ingester:
+  chunk_encoding: snappy
+  chunk_idle_period: 30m
+  chunk_retain_period: 1m
+  max_chunk_age: 1h
+  wal:
+    enabled: true
+    dir: /loki/wal
+
+limits_config:
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  max_streams_per_user: 0
+  ingestion_rate_mb: 10
+  ingestion_burst_size_mb: 20
+  max_query_series: 10000
+
+compactor:
+  working_directory: /loki/compactor
+  shared_store: filesystem
+  retention_enabled: true
+  retention_delete_delay: 2h
+
+querier:
+  max_concurrent: 10
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /loki/rules

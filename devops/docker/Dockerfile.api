@@ -1,0 +1,13 @@
+# =============================================================================
+# Optional Express API Server (for future backend needs)
+# =============================================================================
+FROM node:22-alpine AS api
+WORKDIR /app
+RUN apk add --no-cache curl dumb-init tini
+COPY package*.json ./
+RUN npm ci --only=production --ignore-scripts
+COPY tsconfig.json ./
+COPY src/server/ ./src/server/
+EXPOSE 3001
+USER node
+CMD ["dumb-init", "node", "--import", "tsx", "src/server/index.ts"]
