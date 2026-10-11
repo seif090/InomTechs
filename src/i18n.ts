@@ -24,12 +24,12 @@ i18n
   });
 
 i18n.on('languageChanged', (lng) => {
-  document.dir = lng === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.lang = lng;
 });
 
 // Initial direction set
-document.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
-document.documentElement.lang = i18n.language;
+document.documentElement.dir = i18n.language?.startsWith('ar') ? 'rtl' : 'ltr';
+document.documentElement.lang = i18n.language?.startsWith('ar') ? 'ar' : 'en';
 
 export default i18n;

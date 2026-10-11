@@ -1,1330 +1,547 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { GoogleGenAI } from "@google/genai";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  AreaChart,
-  Area
-} from 'recharts';
-import { 
-  Code, 
-  Smartphone, 
-  GraduationCap, 
-  ChevronRight, 
-  ChevronLeft,
-  Menu, 
-  X, 
-  ArrowRight, 
-  CheckCircle2, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Linkedin, 
-  Facebook,
-  Instagram,
-  Music,
-  ExternalLink,
-  Laptop,
-  Users,
-  Clock,
+import { useTranslation } from 'react-i18next';
+import {
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
+  BrainCircuit,
+  Code2,
+  Globe2,
+  Layers3,
+  Mail,
+  MapPin,
+  Menu,
+  Sparkles,
+  Target,
+  Zap,
   ShieldCheck,
-  MessageSquare,
-  Send,
-  Loader2,
-  Bot,
-  User,
-  Moon,
-  Sun,
-  Quote
+  Workflow,
+  X,
 } from 'lucide-react';
 
-// --- Gemini API Setup ---
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+type Lang = 'en' | 'ar';
 
-const SYSTEM_INSTRUCTION = `You are the InomTechs AI Assistant, a professional and helpful representative of InomTechs Private Limited. 
-Your goal is to help clients understand our services, showcase our projects, and facilitate business deals.
+type Localized = { en: string; ar: string };
 
-About InomTechs:
-- Mission: Empowering small businesses in rural India to expand online.
-- Services: IT Security, UI/UX Design, Web Development, App Development, AR/VR Solutions, and Marketing.
-- Key Projects: 
-  - OMRAH: Tourism solution for Saudi Arabia (Travel/Tourism).
-  - TAJ Platform: Marketing and website design platform.
-  - Alyoumlandmark: Agri-Export site.
-  - Inovent VR: Remote exhibitions and conferences in VR.
-  - Educhains: Educational platform for students and employees.
-  - HASAD: Agri-Tech app linking farmers to markets.
-  - Learnadora: Kids coding platform.
-  - Eco+ Car Care: Comprehensive car service app.
+type Service = {
+  id: string;
+  number: string;
+  title: Localized;
+  description: Localized;
+  points: { en: string[]; ar: string[] };
+  icon: React.ReactNode;
+};
 
-Social Media Links:
-- LinkedIn: https://www.linkedin.com/in/inom-techs-36b25a410
-- TikTok: https://www.tiktok.com/@inom6776?is_from_webapp=1&sender_device=pc
-- Instagram: https://www.instagram.com/inomtechs26/
-- Facebook: https://www.facebook.com/share/189hdW8Ds9/
+type Project = {
+  title: string;
+  category: Localized;
+  description: Localized;
+  index: string;
+  liveUrl: string;
+  screenshotUrl: string;
+};
 
-Tone: Professional, innovative, encouraging, and efficient.
-Language: Always respond in the same language the user is using (Arabic or English).
-When asked about deals: Encourage them to leave their contact details in the form or suggest specific service packages based on their needs.
-If unsure: Ask clarifying questions about their business goals.`;
+const copy = {
+  en: {
+    nav: {
+      home: 'Home',
+      services: 'What We Do',
+      work: 'Our Work',
+      ai: 'AI & Data',
+      about: 'Who We Are',
+      contact: 'Contact',
+      cta: 'Start a Project',
+    },
+    heroEyebrow: 'Technology & Digital Solutions',
+    heroTitleA: 'Technology that turns',
+    heroTitleB: 'ideas into impact.',
+    heroText:
+      'InomTechs builds scalable software, AI-powered solutions, data-driven systems, and digital experiences that help businesses move forward.',
+    heroPrimary: 'Start a Project',
+    heroSecondary: 'Explore Our Work',
+    capability: 'Our capabilities',
+    capabilityTitle: 'Built around the way modern businesses grow.',
+    capabilityText:
+      'From software delivery to AI, analytics, and digital growth, we combine technology and strategy to solve real business challenges.',
+    impactLabel: 'Built for impact',
+    impactItems: ['Scalable by design', 'AI-driven innovation', 'Long-term partnership'],
+    workLabel: 'Selected work',
+    workTitle: 'Digital products designed around real needs.',
+    workText:
+      'Two live projects from the InomTechs portfolio — available to explore online now.',
+    aiLabel: 'AI & Data',
+    aiTitle: 'From raw data to useful intelligence.',
+    aiText:
+      'We help teams explore AI opportunities, rapidly prototype ideas, automate workflows, and turn data into practical business insight.',
+    aiCard1Title: 'AI Strategy & Rapid Prototyping',
+    aiCard1Text:
+      'AI strategy, capability building, LLM prototyping, automation development, and MVP validation for technical teams.',
+    aiCard2Title: 'Data Analysis & Decision Support',
+    aiCard2Text:
+      'Data collection, cleaning, analysis, dashboards, reporting, and actionable insight for business decisions.',
+    aboutLabel: 'Who we are',
+    aboutTitle: 'A technology partner, not just a service provider.',
+    aboutText1:
+      'At InomTechs, we believe in collaboration over service. We work closely with clients to understand their goals, challenges, and vision before shaping the right digital solution.',
+    aboutText2:
+      'Our work spans software development, AI customization, data analysis, and digital marketing — with one goal: creating useful, scalable solutions that support growth and efficiency.',
+    mission: 'Mission',
+    missionText:
+      'Deliver high-quality, customized technology solutions aligned with business goals, while using AI, analytics, automation, and continuous innovation to keep operations future-ready.',
+    vision: 'Vision',
+    visionText:
+      'To innovate and transform the digital landscape by empowering businesses through cutting-edge technology, creativity, and practical solutions.',
+    marketingLabel: 'Digital growth',
+    marketingTitle: 'Strategy, content, execution, and optimization.',
+    marketingText:
+      'Our digital marketing work covers market research, positioning, branding, channel strategy, content planning, campaign execution, tracking, and continuous optimization.',
+    contactEyebrow: 'Let’s build what’s next',
+    contactTitle: 'Have an idea, challenge, or product in mind?',
+    contactText: 'Tell us what you want to build and let’s explore the right path forward.',
+    email: 'info@inom-techs.com',
+    location: 'Alexandria, Egypt',
+    footerText: 'Technology, AI, data, and digital growth — built around your business.',
+    rights: 'All rights reserved.',
+  },
+  ar: {
+    nav: {
+      home: 'الرئيسية',
+      services: 'خدماتنا',
+      work: 'أعمالنا',
+      ai: 'الذكاء والبيانات',
+      about: 'من نحن',
+      contact: 'تواصل معنا',
+      cta: 'ابدأ مشروعك',
+    },
+    heroEyebrow: 'حلول تقنية ورقمية متكاملة',
+    heroTitleA: 'تقنية تحوّل',
+    heroTitleB: 'الأفكار إلى أثر حقيقي.',
+    heroText:
+      'تطوّر InomTechs حلولاً برمجية قابلة للتوسع، وتطبيقات مدعومة بالذكاء الاصطناعي، وأنظمة قائمة على البيانات، وتجارب رقمية تساعد الشركات على النمو بثقة.',
+    heroPrimary: 'ابدأ مشروعك',
+    heroSecondary: 'استكشف أعمالنا',
+    capability: 'قدراتنا',
+    capabilityTitle: 'حلول مبنية حول احتياجات الأعمال الحديثة.',
+    capabilityText:
+      'من تطوير البرمجيات إلى الذكاء الاصطناعي وتحليل البيانات والنمو الرقمي، نجمع بين التقنية والاستراتيجية لحل تحديات أعمال حقيقية.',
+    impactLabel: 'مصمم لصناعة أثر',
+    impactItems: ['قابل للتوسع من البداية', 'ابتكار مدفوع بالذكاء الاصطناعي', 'شراكة تقنية طويلة المدى'],
+    workLabel: 'أعمال مختارة',
+    workTitle: 'منتجات رقمية مصممة حول احتياجات حقيقية.',
+    workText:
+      'مشروعان مباشران من أعمال InomTechs يمكنك استكشافهما الآن عبر الإنترنت.',
+    aiLabel: 'الذكاء الاصطناعي والبيانات',
+    aiTitle: 'من البيانات الخام إلى قرارات أكثر ذكاءً.',
+    aiText:
+      'نساعد الفرق على اكتشاف فرص الذكاء الاصطناعي، وبناء نماذج أولية بسرعة، وأتمتة العمليات، وتحويل البيانات إلى رؤى عملية قابلة للتنفيذ.',
+    aiCard1Title: 'استراتيجية الذكاء الاصطناعي والنماذج الأولية',
+    aiCard1Text:
+      'استراتيجية للذكاء الاصطناعي، بناء القدرات، نماذج LLM الأولية، الأتمتة، والتحقق السريع من الأفكار والـ MVP.',
+    aiCard2Title: 'تحليل البيانات ودعم القرار',
+    aiCard2Text:
+      'جمع وتنظيف وتحليل البيانات، وبناء لوحات المعلومات والتقارير، واستخراج رؤى تساعد الإدارة على اتخاذ القرار.',
+    aboutLabel: 'من نحن',
+    aboutTitle: 'شريك تقني، وليس مجرد مزود خدمة.',
+    aboutText1:
+      'في InomTechs نؤمن بالتعاون قبل الخدمة. نعمل مع عملائنا لفهم الأهداف والتحديات والرؤية قبل تصميم الحل الرقمي المناسب.',
+    aboutText2:
+      'تشمل أعمالنا تطوير البرمجيات، وتخصيص حلول الذكاء الاصطناعي، وتحليل البيانات، والتسويق الرقمي — بهدف واحد: بناء حلول عملية وقابلة للتوسع تدعم النمو والكفاءة.',
+    mission: 'رسالتنا',
+    missionText:
+      'تقديم حلول تقنية عالية الجودة ومخصصة لأهداف الأعمال، مع الاستفادة من الذكاء الاصطناعي والتحليلات والأتمتة والابتكار المستمر لبناء عمليات جاهزة للمستقبل.',
+    vision: 'رؤيتنا',
+    visionText:
+      'الابتكار وتحويل المشهد الرقمي عبر تمكين الشركات بالتقنيات الحديثة والإبداع والحلول العملية.',
+    marketingLabel: 'النمو الرقمي',
+    marketingTitle: 'استراتيجية، محتوى، تنفيذ، وتحسين مستمر.',
+    marketingText:
+      'تشمل خدماتنا في التسويق الرقمي أبحاث السوق وتحديد التموضع وبناء الهوية واختيار القنوات وتخطيط المحتوى وتنفيذ الحملات وقياس النتائج وتحسين الأداء.',
+    contactEyebrow: 'لنصنع الخطوة القادمة',
+    contactTitle: 'لديك فكرة أو تحدٍ أو منتج تريد تطويره؟',
+    contactText: 'شاركنا ما تريد بناءه، ولنبحث معاً عن أفضل طريق للتنفيذ.',
+    email: 'info@inom-techs.com',
+    location: 'الإسكندرية، مصر',
+    footerText: 'تقنية وذكاء اصطناعي وبيانات ونمو رقمي — مبنية حول احتياجات أعمالك.',
+    rights: 'جميع الحقوق محفوظة.',
+  },
+} as const;
 
-// --- Components ---
+const services: Service[] = [
+  {
+    id: 'software',
+    number: '01',
+    title: { en: 'Software Development', ar: 'تطوير البرمجيات' },
+    description: {
+      en: 'End-to-end software development that turns ideas into scalable, user-focused digital products.',
+      ar: 'تطوير برمجي متكامل يحوّل الأفكار إلى منتجات رقمية قابلة للتوسع ومتمحورة حول المستخدم.',
+    },
+    points: {
+      en: ['Web & app development', 'Testing & delivery', 'Product development'],
+      ar: ['تطوير الويب والتطبيقات', 'الاختبار والتسليم', 'تطوير المنتجات'],
+    },
+    icon: <Code2 size={28} />,
+  },
+  {
+    id: 'ai',
+    number: '02',
+    title: { en: 'AI Customization', ar: 'حلول الذكاء الاصطناعي' },
+    description: {
+      en: 'Tailored AI solutions designed to improve efficiency, accelerate experimentation, and support innovation.',
+      ar: 'حلول ذكاء اصطناعي مخصصة لتحسين الكفاءة وتسريع التجربة ودعم الابتكار.',
+    },
+    points: {
+      en: ['AI strategy', 'Rapid prototyping', 'Automation development'],
+      ar: ['استراتيجية الذكاء الاصطناعي', 'النماذج الأولية السريعة', 'تطوير الأتمتة'],
+    },
+    icon: <BrainCircuit size={28} />,
+  },
+  {
+    id: 'data',
+    number: '03',
+    title: { en: 'Data Analysis', ar: 'تحليل البيانات' },
+    description: {
+      en: 'Data preparation, analysis, visualization, and reporting that turn complex information into useful insight.',
+      ar: 'إعداد وتحليل وتصور البيانات والتقارير لتحويل المعلومات المعقدة إلى رؤى مفيدة.',
+    },
+    points: {
+      en: ['Data preparation', 'Business insights', 'Dashboards & reporting'],
+      ar: ['إعداد البيانات', 'رؤى الأعمال', 'لوحات المعلومات والتقارير'],
+    },
+    icon: <BarChart3 size={28} />,
+  },
+  {
+    id: 'marketing',
+    number: '04',
+    title: { en: 'Digital Marketing', ar: 'التسويق الرقمي' },
+    description: {
+      en: 'Full-funnel digital marketing covering research, brand positioning, content, channels, campaigns, and optimization.',
+      ar: 'تسويق رقمي متكامل يبدأ من البحث والتموضع ويشمل المحتوى والقنوات والحملات والتحسين المستمر.',
+    },
+    points: {
+      en: ['Brand & positioning', 'Content & campaigns', 'Performance optimization'],
+      ar: ['الهوية والتموضع', 'المحتوى والحملات', 'تحسين الأداء'],
+    },
+    icon: <Target size={28} />,
+  },
+];
 
-const Chatbot = React.memo(() => {
-  const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ role: 'user' | 'bot', text: string }[]>([
-    { role: 'bot', text: t('bot_welcome') }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+const projects: Project[] = [
+  {
+    title: 'Inovents',
+    index: '01',
+    category: { en: 'Smart Event Engagement Platform', ar: 'منظومة ذكية للفعاليات' },
+    description: {
+      en: 'A live smart-events platform from the InomTechs portfolio, built around digital event experiences and audience engagement.',
+      ar: 'منصة فعاليات ذكية مباشرة ضمن أعمال InomTechs، تركز على التجارب الرقمية للفعاليات وتفاعل الجمهور.',
+    },
+    liveUrl: 'https://inovents.net',
+    screenshotUrl: '/projects/inovents.png',
+  },
+  {
+    title: 'Upseeds',
+    index: '02',
+    category: { en: 'AI-Powered Climate Risk Platform', ar: 'منصة مخاطر مناخية مدعومة بالذكاء الاصطناعي' },
+    description: {
+      en: 'A live AI-powered ClimateTech platform focused on real-time climate-risk scoring, startup growth, and digital ecosystem tools.',
+      ar: 'منصة ClimateTech مباشرة مدعومة بالذكاء الاصطناعي، تركّز على تقييم مخاطر المناخ في الوقت الفعلي وأدوات نمو الشركات الناشئة والمنظومة الرقمية.',
+    },
+    liveUrl: 'https://upseeds.inovents.net/',
+    screenshotUrl: '/projects/upseeds.png',
+  },
+];
 
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [...messages.map(m => ({
-          role: m.role === 'user' ? 'user' : 'model',
-          parts: [{ text: m.text }]
-        })), { role: 'user', parts: [{ text: userMessage }] }],
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-        }
-      });
-
-      const botText = response.text || "I'm sorry, I encountered an error. Please try again.";
-      setMessages(prev => [...prev, { role: 'bot', text: botText }]);
-    } catch (error) {
-      console.error("Gemini Error:", error);
-      setMessages(prev => [...prev, { role: 'bot', text: "I'm having trouble connecting to my brain right now. Please try again later." }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <>
-      {/* Toggle Button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 bg-orange-600 text-white p-4 rounded-full shadow-2xl hover:bg-orange-700 transition-colors"
-      >
-        {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
-      </motion.button>
-
-      {/* Chat Window */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-6 z-50 sm:w-[400px] h-[500px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-gray-100 dark:border-gray-800"
-          >
-            {/* Header */}
-            <div className="bg-black p-4 text-white flex items-center gap-3">
-              <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
-                <Bot size={18} />
-              </div>
-              <div>
-                <h4 className="font-bold text-sm">InomTechs Assistant</h4>
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] text-gray-400 font-medium">Online & Ready</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 dark:bg-gray-950/50">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex gap-2 max-w-[85%] ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${m.role === 'user' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'bg-gray-800 dark:bg-gray-700 text-white'}`}>
-                      {m.role === 'user' ? <User size={14} /> : <Bot size={14} />}
-                    </div>
-                    <div className={`p-3 rounded-2xl text-sm leading-relaxed ${m.role === 'user' ? 'bg-orange-600 text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm border border-gray-100 dark:border-gray-700 rounded-tl-none'}`}>
-                      {m.text}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 dark:border-gray-700">
-                    <Loader2 size={18} className="animate-spin text-orange-600" />
-                  </div>
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Input */}
-            <form 
-              onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-              className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 flex gap-2"
-            >
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={t('bot_placeholder')}
-                className="flex-1 bg-gray-50 dark:bg-gray-800 border-0 rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 dark:text-white"
-              />
-              <button 
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="bg-black dark:bg-orange-600 text-white p-2 rounded-xl hover:bg-orange-600 dark:hover:bg-orange-700 transition-colors disabled:opacity-50"
-              >
-                <Send size={18} />
-              </button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
-});
-
-const Navbar = React.memo(({ darkMode, toggleDarkMode }: { darkMode: boolean, toggleDarkMode: () => void }) => {
-  const [isOpen, setIsOpen] = useState(false);
+function App() {
+  const { i18n } = useTranslation();
+  const lang = (i18n.language?.startsWith('ar') ? 'ar' : 'en') as Lang;
+  const t = copy[lang];
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeService, setActiveService] = useState(0);
   const [scrolled, setScrolled] = useState(false);
-  const { t, i18n } = useTranslation();
+  const [scrollProgress, setScrollProgress] = useState(0);
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'ar' : 'en';
-    i18n.changeLanguage(newLang);
-  };
+  const navItems = useMemo(
+    () => [
+      [t.nav.services, '#services'],
+      [t.nav.work, '#work'],
+      [t.nav.ai, '#ai-data'],
+      [t.nav.about, '#about'],
+      [t.nav.contact, '#contact'],
+    ],
+    [t],
+  );
 
   useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setScrolled(window.scrollY > 50);
-          ticking = false;
-        });
-        ticking = true;
-      }
+    const onScroll = () => {
+      setScrolled(window.scrollY > 18);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0);
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const navLinks = [
-    { name: t('home'), href: '#' },
-    { name: t('about'), href: '#about' },
-    { name: t('services_nav'), href: '#services' },
-    { name: t('projects_nav'), href: '#projects' },
-    { name: t('products_nav'), href: '#products' },
-    { name: t('contact'), href: '#contact' },
-  ];
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuOpen]);
+
+  const switchLanguage = () => {
+    const next = lang === 'en' ? 'ar' : 'en';
+    i18n.changeLanguage(next);
+    document.documentElement.lang = next;
+    document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr';
+  };
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md py-3 shadow-sm' : 'bg-transparent py-5'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <span className={`text-2xl font-bold tracking-tighter ${scrolled ? 'text-black dark:text-white' : 'text-black dark:text-white'}`}>
-              InomTechs<span className="text-orange-600">.</span>
-            </span>
-          </div>
-          
-          <div className="hidden md:block">
-            <div className={`ml-10 flex items-baseline ${i18n.language === 'ar' ? 'space-x-reverse space-x-8' : 'space-x-8'}`}>
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-500 transition-colors"
-                >
-                  {link.name}
-                </a>
-              ))}
-              <div className={`flex items-center ${i18n.language === 'ar' ? 'mr-8 gap-4' : 'gap-4'}`}>
-                <button
-                  onClick={toggleLanguage}
-                  className="px-3 py-1 text-sm font-bold border-2 border-orange-600 rounded-md hover:bg-orange-600 hover:text-white transition-all text-orange-600 dark:text-orange-500"
-                >
-                  {i18n.language === 'en' ? 'AR' : 'EN'}
-                </button>
-                <button
-                  onClick={toggleDarkMode}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-300"
-                >
-                  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
-                <button className="bg-black dark:bg-orange-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 dark:hover:bg-orange-700 transition-all">
-                  {t('get_started')}
-                </button>
-              </div>
-            </div>
-          </div>
+    <div className="site-shell">
+      <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} />
+      <header className={`topbar ${scrolled ? 'topbar--scrolled' : ''}`}>
+        <div className="nav-wrap">
+          <a href="#top" className="brand" aria-label="InomTechs home">
+            <img src="/assets/inomtechs-logo.jpg" alt="InomTechs" width="200" height="200" />
+          </a>
 
-          <div className="md:hidden flex items-center gap-4">
-            <button
-              onClick={toggleLanguage}
-              className="px-2 py-1 text-xs font-bold border border-orange-600 rounded-md text-orange-600"
-            >
-              {i18n.language === 'en' ? 'AR' : 'EN'}
-            </button>
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-300"
-            >
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <button onClick={() => setIsOpen(!isOpen)} className="text-black dark:text-white p-2">
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+          <nav className="desktop-nav" aria-label="Primary navigation">
+            {navItems.map(([label, href]) => (
+              <a key={href} href={href}>{label}</a>
+            ))}
+          </nav>
+
+          <div className="nav-actions">
+            <button type="button" className="lang-btn" onClick={switchLanguage} aria-label={lang === 'en' ? 'Switch to Arabic' : 'Switch to English'}>{lang === 'en' ? 'AR' : 'EN'}</button>
+            <a className="nav-cta" href="#contact">{t.nav.cta}<ArrowUpRight size={17} /></a>
+            <button type="button" className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen} aria-controls="mobile-navigation"><Menu /></button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 overflow-hidden"
-          >
-            <div className="px-4 pt-2 pb-6 space-y-1">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="block px-3 py-4 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-500 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg"
-                >
-                  {link.name}
-                </a>
-              ))}
-              <div className="pt-4 px-3">
-                <button className="w-full bg-black dark:bg-orange-600 text-white py-3 rounded-xl font-medium">
-                  {t('get_started')}
-                </button>
+        {menuOpen && (
+          <motion.div id="mobile-navigation" className="mobile-menu" role="dialog" aria-modal="true" aria-label="Mobile navigation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <div className="mobile-menu-panel">
+              <div className="mobile-menu-head">
+                <img src="/assets/inomtechs-logo.jpg" alt="InomTechs" width="200" height="200" />
+                <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu"><X /></button>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
-  );
-});
-
-// --- About Us Component ---
-const AboutUs = React.memo(() => {
-  return (
-    <section id="about" className="py-24 bg-white dark:bg-black transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="relative"
-          >
-            <div className="relative rounded-[40px] overflow-hidden shadow-2xl">
-              <img 
-                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=60&w=800" 
-                alt="InomTechs team" 
-                className="w-full h-80 sm:h-[500px] object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-8 left-8 right-8">
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl">
-                  <p className="text-white font-medium text-lg italic text-center">
-                    "Driving innovation, improving efficiency, and contributing to the advancement of technology."
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Background Accent */}
-            <div className="absolute -z-10 -bottom-6 -left-6 w-64 h-64 bg-orange-100 dark:bg-orange-950/20 rounded-full blur-3xl opacity-50" />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('our_story')}</p>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl mb-8">{t('about')}</h2>
-            
-            <div className="space-y-6 text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
-              <p>
-                Inomtechs specialize in the creation, development, and provision of products, services, and solutions that are rooted in technology, including software development, application development, business development, marketing, and content management systems.
-              </p>
-              <p>
-                As a leading provider of technology capabilities, Inomtechs contributes to the development of a variety of fields by driving innovation, improving efficiency, and contributing to the advancement of technology.
-              </p>
-            </div>
-
-            <div className="mt-10 grid grid-cols-2 gap-8">
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 shadow-sm border border-gray-100 dark:border-gray-800">
-                <h4 className="text-3xl font-bold text-orange-600 dark:text-orange-500 mb-1">50+</h4>
-                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('expert_developers')}</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 shadow-sm border border-gray-100 dark:border-gray-800">
-                <h4 className="text-3xl font-bold text-orange-600 dark:text-orange-500 mb-1">2014+</h4>
-                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('years_excellence')}</p>
-              </div>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="mt-12 bg-black dark:bg-orange-600 text-white px-8 py-4 rounded-full font-bold shadow-xl flex items-center gap-2 group transition-all"
-            >
-              {t('explore_mission')} <ArrowRight size={20} className={`${i18n.language === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} />
-            </motion.button>
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-});
-
-const Hero = React.memo(() => {
-  const { t } = useTranslation();
-  return (
-    <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-orange-50 dark:bg-orange-950/10 hidden lg:block transform skew-x-12 translate-x-24" />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <span className="inline-block py-1 px-3 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold uppercase tracking-wider mb-6">
-              {t('empowering_small_businesses')}
-            </span>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.1] text-gray-900 dark:text-white mb-6">
-              {t('welcome')} <span className="text-orange-600">Company.</span>
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-lg leading-relaxed">
-              {t('welcome_desc')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-black dark:bg-orange-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-orange-600 dark:hover:bg-orange-700 transition-all flex items-center justify-center gap-2 group shadow-xl hover:shadow-orange-200">
-                {t('explore_services')} <ArrowRight className={`${i18n.language === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} size={20} />
-              </button>
-              <button className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white px-8 py-4 rounded-full font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
-                {t('our_mission')}
-              </button>
-            </div>
-            
-            <div className={`mt-12 flex items-center ${i18n.language === 'ar' ? 'flex-row-reverse sm:flex-row gap-6' : 'gap-6'}`}>
-              <div className={`flex ${i18n.language === 'ar' ? '-space-x-reverse -space-x-3' : '-space-x-3'}`}>
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-800 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?u=${i}`} alt="User" />
-                  </div>
+              <div className="mobile-links">
+                {navItems.map(([label, href], idx) => (
+                  <a key={href} href={href} onClick={() => setMenuOpen(false)}><span>0{idx + 1}</span>{label}</a>
                 ))}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                <span className="font-bold text-gray-900 dark:text-white font-mono">100+</span> {t('businesses_empowered')}
-              </p>
+              <a className="mobile-cta" href="#contact" onClick={() => setMenuOpen(false)}>{t.nav.cta}<ArrowRight /></a>
             </div>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative"
-          >
-            <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl">
-              <img 
-                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=60&w=1200" 
-                alt="Modern technology workspace representing InomTechs digital development environment" 
-                className="w-full h-auto object-cover"
-                loading="eager"
-                decoding="async"
-              />
-            </div>
-            {/* Floating Cards */}
-            <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-6 -left-6 bg-white dark:bg-gray-900 p-4 rounded-xl shadow-lg z-20 flex items-center gap-3 border border-orange-100 dark:border-gray-800"
-            >
-              <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center text-orange-600 dark:text-orange-400">
-                <CheckCircle2 size={24} />
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 font-medium">{t('projects_done')}</p>
-                <p className="text-lg font-bold dark:text-white">150+</p>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className={`absolute -bottom-6 ${i18n.language === 'ar' ? '-left-6' : '-right-6'} bg-white dark:bg-gray-900 p-4 rounded-xl shadow-lg z-20 flex items-center gap-3 border border-blue-100 dark:border-gray-800`}
-            >
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400">
-                <Users size={24} />
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 font-medium">{t('students_trained')}</p>
-                <p className="text-lg font-bold dark:text-white">500+</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-});
-
-const Services = React.memo(() => {
-  const { t, i18n } = useTranslation();
-  const services = [
-    {
-      title: t('service_security_title'),
-      desc: t('service_security_desc'),
-      icon: <ShieldCheck size={32} />,
-      lightColor: "bg-orange-50 dark:bg-orange-900/20",
-      textColor: "text-orange-600 dark:text-orange-400"
-    },
-    {
-      title: t('service_uiux_title'),
-      desc: t('service_uiux_desc'),
-      icon: <Users size={32} />,
-      lightColor: "bg-purple-50 dark:bg-purple-900/20",
-      textColor: "text-purple-600 dark:text-purple-400"
-    },
-    {
-      title: t('service_web_title'),
-      desc: t('service_web_desc'),
-      icon: <Laptop size={32} />,
-      lightColor: "bg-orange-50 dark:bg-orange-900/20",
-      textColor: "text-orange-600 dark:text-orange-400"
-    },
-    {
-      title: t('service_app_title'),
-      desc: t('service_app_desc'),
-      icon: <Smartphone size={32} />,
-      lightColor: "bg-green-50 dark:bg-green-900/20",
-      textColor: "text-green-600 dark:text-green-400"
-    },
-    {
-      title: t('service_arvr_title'),
-      desc: t('service_arvr_desc'),
-      icon: <Code size={32} />,
-      lightColor: "bg-blue-50 dark:bg-blue-900/20",
-      textColor: "text-blue-600 dark:text-blue-400"
-    },
-    {
-      title: t('service_marketing_title'),
-      desc: t('service_marketing_desc'),
-      icon: <ExternalLink size={32} />,
-      lightColor: "bg-yellow-50 dark:bg-yellow-900/20",
-      textColor: "text-yellow-600 dark:text-yellow-400"
-    }
-  ];
-
-  return (
-    <section id="services" className="py-24 bg-white dark:bg-black transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('our_capabilities')}</p>
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">{t('services_title')}</h2>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
-          {services.map((service, idx) => (
-            <motion.div
-              key={idx}
-              whileHover={{ y: -10 }}
-              className="p-8 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl dark:bg-gray-900/50 transition-all duration-300 group"
-            >
-              <div className={`${service.lightColor} ${service.textColor} w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                {service.icon}
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{service.title}</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
-                {service.desc}
-              </p>
-              <a href="#" className={`text-sm font-bold flex items-center gap-2 ${service.textColor} group-hover:underline underline-offset-4`}>
-                {t('learn_more')} {i18n.language === 'ar' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-              </a>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-});
-
-const Projects = React.memo(() => {
-  const { t } = useTranslation();
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-
-  const projects = [
-    {
-      title: "OMRAH",
-      category: t('project_omrah_cat'),
-      image: "https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&q=60&w=600",
-      desc: t('project_omrah_desc'),
-      technologies: ["React", "FastAPI", "Cloudflare", "ElasticSearch"],
-      testimonial: {
-        author: "Ahmed Al-Farsi",
-        text: "The scalability InomTechs delivered for OMRAH during peak season was phenomenal. Our users experienced zero lag."
-      }
-    },
-    {
-      title: "TAJ Platform",
-      category: t('project_taj_cat'),
-      image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=60&w=600",
-      desc: t('project_taj_desc'),
-      technologies: ["Next.js", "Tailwind CSS", "PostgreSQL", "Firebase"],
-      testimonial: {
-        author: "Meera Nair",
-        text: "The TAJ Platform gave our craft business a professional edge that we couldn't have achieved ourselves."
-      }
-    },
-    {
-      title: "Alyoumlandmark",
-      category: t('project_alyoum_cat'),
-      image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&q=60&w=600",
-      desc: t('project_alyoum_desc'),
-      technologies: ["Hyperledger Fabric", "Node.js", "IoT Sensors", "React Native"],
-      testimonial: {
-        author: "Samir Gupta",
-        text: "Transparency is key in exports. The blockchain solution from InomTechs has built massive trust with our EU buyers."
-      }
-    },
-    {
-      title: "Inovent VR",
-      category: t('project_inovent_cat'),
-      image: "https://images.unsplash.com/photo-1478416272538-5f7e51dc5400?auto=format&fit=crop&q=60&w=600",
-      desc: t('project_inovent_desc'),
-      technologies: ["Unity 3D", "WebXR", "WebRTC", "Socket.io"],
-      testimonial: {
-        author: "Elena Petrova",
-        text: "Inovent's VR quality is unmatched. Even with moderate speeds, the immersion is seamless."
-      }
-    },
-    {
-      title: "Educhains",
-      category: t('project_educhains_cat'),
-      image: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=60&w=600",
-      desc: t('project_educhains_desc'),
-      technologies: ["LMS architecture", "Python", "React", "AWS Lambda"],
-      testimonial: {
-        author: "Professor Marcus",
-        text: "Completion rates jumped by 40% after we implemented InomTech's gamified learning module."
-      }
-    },
-    {
-      title: "HASAD",
-      category: t('project_hasad_cat'),
-      image: "https://images.unsplash.com/photo-1495539406979-bf61750d38ad?auto=format&fit=crop&q=60&w=600",
-      desc: t('project_hasad_desc'),
-      technologies: ["Data Science", "React", "D3.js", "Serverless"],
-      testimonial: {
-        author: "Farmer Gopal",
-        text: "The simple red/green lights tell me exactly when to sell my crop. My profits are up significantly."
-      }
-    }
-  ];
-
-  return (
-    <section id="projects" className="py-24 bg-gray-50 dark:bg-gray-950 overflow-hidden transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
-          <div>
-            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('our_portfolio')}</p>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">{t('successful_projects')}</h2>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, idx) => (
-            <motion.div 
-              key={idx} 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className="group relative rounded-3xl overflow-hidden shadow-md bg-white dark:bg-gray-900 h-96 cursor-pointer"
-              onClick={() => setSelectedProject(project)}
-            >
-              <div className="h-full overflow-hidden">
-                <img 
-                  src={project.image} 
-                  alt={project.title} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent text-white translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">{project.category}</p>
-                    <h3 className="text-xl font-bold">{project.title}</h3>
-                  </div>
-                  <button className="bg-orange-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-                <p className="text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-2 mb-4">
-                  {project.desc}
-                </p>
-                <div className="mt-2">
-                  <span className="text-xs font-bold border border-white/30 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm">
-                    {t('view_details')}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {selectedProject && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 sm:pt-20">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedProject(null)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative w-full max-w-5xl bg-white dark:bg-gray-900 rounded-3xl sm:rounded-[40px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
-            >
-              <button 
-                onClick={() => setSelectedProject(null)}
-                className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-3 rounded-full backdrop-blur-md transition-all border border-white/20"
-              >
-                <X size={20} className="sm:hidden" />
-                <X size={24} className="hidden sm:block" />
-              </button>
-
-              <div className="flex flex-col md:flex-row h-full overflow-y-auto">
-                <div className="md:w-5/12 h-48 sm:h-64 md:h-auto sticky top-0 md:relative z-0">
-                  <img src={selectedProject.image} alt={selectedProject.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
-                </div>
-                <div className="md:w-7/12 p-6 sm:p-8 md:p-14 lg:p-20">
-                  <div className="flex flex-wrap items-center gap-3 mb-6">
-                    <span className="px-4 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-500 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest">
-                      {selectedProject.category}
-                    </span>
-                  </div>
-                  
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 leading-tight">
-                    {selectedProject.title}
-                  </h2>
-                  
-                  <div className="space-y-12">
-                    <section>
-                      <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4">{t('case_overview')}</h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
-                        {selectedProject.desc}
-                      </p>
-                    </section>
-
-                    <section>
-                      <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4">Stack & Tools</h4>
-                      <div className="flex flex-wrap gap-3">
-                        {selectedProject.technologies?.map((tech: string, i: number) => (
-                          <span key={i} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold border border-gray-200 dark:border-gray-700">
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                    </section>
-
-                    {selectedProject.testimonial && (
-                      <section className="bg-orange-50 dark:bg-orange-900/10 p-8 md:p-10 rounded-[32px] border border-orange-100 dark:border-orange-900/20">
-                        <div className="text-orange-500 mb-6">
-                          <Quote size={40} fill="currentColor" className="opacity-20" />
-                        </div>
-                        <p className="text-gray-800 dark:text-gray-200 text-xl font-medium mb-6 italic leading-snug">
-                          "{selectedProject.testimonial.text}"
-                        </p>
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold">
-                            {selectedProject.testimonial.author[0]}
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-900 dark:text-white text-lg">
-                              {selectedProject.testimonial.author}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-500 font-medium">Verify Client Review</p>
-                          </div>
-                        </div>
-                      </section>
-                    )}
-                  </div>
-
-                  <div className="mt-16 flex flex-col sm:flex-row gap-4">
-                    <button className="flex-1 bg-black dark:bg-white text-white dark:text-black hover:bg-orange-600 dark:hover:bg-orange-500 hover:text-white font-bold py-5 rounded-2xl shadow-xl transition-all text-lg">
-                      Explore Case Study
-                    </button>
-                    <button 
-                      onClick={() => setSelectedProject(null)}
-                      className="px-10 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-bold py-5 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-lg"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
         )}
       </AnimatePresence>
-    </section>
-  );
-});
 
-const AnalyticsChart = React.memo(() => {
-  const data = useMemo(() => [
-    { name: 'Jan', value: 400 },
-    { name: 'Feb', value: 300 },
-    { name: 'Mar', value: 500 },
-    { name: 'Apr', value: 450 },
-    { name: 'May', value: 600 },
-    { name: 'Jun', value: 550 },
-  ], []);
-
-  return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-4 sm:p-6 h-[300px] sm:h-[400px] w-full border border-orange-100 dark:border-gray-800 relative overflow-hidden group transition-colors duration-300">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-orange-300" />
-      <div className="flex justify-between items-center mb-4 sm:mb-6">
-        <div>
-          <h5 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">Production Velocity</h5>
-          <p className="text-[8px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-wider">Live System Metrics</p>
-        </div>
-        <div className="flex gap-2">
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-[8px] sm:text-[10px] font-bold text-green-600 uppercase">Active</span>
-        </div>
-      </div>
-      
-      <ResponsiveContainer width="100%" height="80%">
-        <AreaChart data={data}>
-          <defs>
-            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB33" />
-          <XAxis 
-            dataKey="name" 
-            axisLine={false} 
-            tickLine={false} 
-            tick={{ fontSize: 10, fill: '#9ca3af', fontWeight: 600 }}
-            dy={10}
-          />
-          <YAxis 
-            hide 
-          />
-          <Tooltip 
-            contentStyle={{ 
-              borderRadius: '12px', 
-              border: 'none', 
-              backgroundColor: '#1F2937',
-              boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3)',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              color: '#F3F4F6'
-            }}
-            itemStyle={{ color: '#F3F4F6' }}
-          />
-          <Area 
-            type="monotone" 
-            dataKey="value" 
-            stroke="#f97316" 
-            strokeWidth={3}
-            fillOpacity={1} 
-            fill="url(#colorValue)" 
-            animationDuration={2000}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        {[
-          { label: 'Uptime', val: '99.9%' },
-          { label: 'Latency', val: '24ms' },
-          { label: 'Security', val: 'Verified' }
-        ].map((item, i) => (
-          <div key={i} className="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
-            <p className="text-[8px] text-gray-400 font-bold uppercase">{item.label}</p>
-            <p className="text-[10px] font-bold text-gray-900 dark:text-gray-100">{item.val}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-});
-
-const Products = React.memo(() => {
-  const { t } = useTranslation();
-  const products = [
-    {
-      name: "Multilingual eCommerce",
-      type: "Online Store",
-      desc: "Advanced eCommerce solution supporting Arabic & English with integrated payment gateways and responsive design.",
-      features: ["Multi-Language", "Payment Gateways", "Search Friendly", "Inventory Management"]
-    },
-    {
-      name: "IMS - IT Management",
-      type: "Enterprise System",
-      desc: "Comprehensive IT department management software covering assets, inventory, VOIP, and security.",
-      features: ["Assets Management", "Inventory Control", "VOIP Admin", "License Tracking"]
-    },
-    {
-      name: "Almattjer",
-      type: "Daily Needs",
-      desc: "Electronic store and mobile application for selling all daily necessities with merchant hosting capabilities.",
-      features: ["Mobile App", "Vendor Portal", "Order Tracking", "Daily Essentials"]
-    },
-    {
-      name: "Green Syntax Portal",
-      type: "Development Tool",
-      desc: "Advanced reporting and data management portal for system administrators and developers.",
-      features: ["Advanced Reports", "Data Encryption", "User Management", "Task Automation"]
-    }
-  ];
-
-  return (
-    <section id="products" className="py-24 bg-white dark:bg-black transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div>
-            <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('our_offerings')}</p>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl mb-8">{t('proprietary_products')}</h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 leading-relaxed italic border-l-4 border-orange-500 pl-6">
-              "Technology should be accessible to everyone, regardless of their location or bandwidth. Our products are built with this core philosophy."
-            </p>
-            <div className="space-y-6">
-              {products.map((product, idx) => (
-                <div key={idx} className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors border border-gray-100 dark:border-gray-800">
-                  <div className="flex justify-between items-start mb-4">
-                    <h4 className="text-xl font-bold text-gray-900 dark:text-white">{product.name}</h4>
-                    <span className="text-[10px] font-bold bg-white dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded border border-gray-200 dark:border-gray-700">SOFTWARE</span>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{product.desc}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.features.map((feat, i) => (
-                      <span key={i} className="text-[10px] uppercase font-bold text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded">
-                        {feat}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="relative">
-            <div className="bg-orange-50 dark:bg-orange-950/10 rounded-[40px] p-4 lg:p-12 border border-orange-100 dark:border-gray-800 shadow-inner">
-               <AnalyticsChart />
-              <div className="absolute top-1/2 -right-12 hidden xl:block">
-                <div className="bg-black dark:bg-gray-900 text-white p-6 rounded-2xl shadow-2xl max-w-xs border border-white/10 dark:border-gray-800">
-                  <ShieldCheck className="text-orange-500 mb-4" size={32} />
-                  <h5 className="font-bold mb-2">Real-time Optimization</h5>
-                  <p className="text-xs text-gray-400">Our proprietary products utilize live data analytics to optimize performance across all rural deployments.</p>
-                </div>
+      <main id="top">
+        <section className="hero section-pad">
+          <div className="hero-orb hero-orb--one" />
+          <div className="hero-orb hero-orb--two" />
+          <div className="hero-grid max-wrap">
+            <motion.div className="hero-copy" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .75 }}>
+              <p className="eyebrow"><Sparkles size={16} />{t.heroEyebrow}</p>
+              <h1>{t.heroTitleA}<span>{t.heroTitleB}</span></h1>
+              <p className="hero-description">{t.heroText}</p>
+              <div className="hero-actions">
+                <a href="#contact" className="primary-btn">{t.heroPrimary}<ArrowUpRight /></a>
+                <a href="#work" className="text-link">{t.heroSecondary}<ArrowRight /></a>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-});
-
-// --- Testimonials Component ---
-const Testimonials = React.memo(() => {
-  const { t } = useTranslation();
-  const testimonials = [
-    {
-      name: "Rajesh Kumar",
-      company: "Heritage Crafts",
-      role: "CEO",
-      feedback: t('testimonial_rajesh'),
-      image: "https://i.pravatar.cc/150?u=rajesh"
-    },
-    {
-      name: "Sarah Ahmed",
-      company: "EduReach",
-      role: "Founder",
-      feedback: t('testimonial_sarah'),
-      image: "https://i.pravatar.cc/150?u=sarah"
-    },
-    {
-      name: "Amit Singh",
-      company: "AgriExport Solutions",
-      role: "Director",
-      feedback: t('testimonial_amit'),
-      image: "https://i.pravatar.cc/150?u=amit"
-    }
-  ];
-
-  return (
-    <section id="testimonials" className="py-24 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <p className="text-orange-600 dark:text-orange-500 font-bold tracking-widest uppercase text-xs mb-2">{t('success_stories')}</p>
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">{t('what_clients_say')}</h2>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
-          {testimonials.map((t, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 relative group"
-            >
-              <div className="absolute top-6 right-8 text-orange-100 dark:text-orange-900/20 group-hover:text-orange-200 dark:group-hover:text-orange-900/40 transition-colors">
-                <Quote size={64} fill="currentColor" />
-              </div>
-              
-              <div className="flex items-center gap-4 mb-6">
-                <img 
-                  src={t.image} 
-                  alt={t.name} 
-                  className="w-14 h-14 rounded-full border-2 border-orange-500"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white">{t.name}</h4>
-                  <p className="text-xs text-orange-600 dark:text-orange-500 font-semibold">{t.role}, {t.company}</p>
-                </div>
-              </div>
-              
-              <p className="text-gray-600 dark:text-gray-400 italic leading-relaxed relative z-10">
-                "{t.feedback}"
-              </p>
             </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-});
 
-const WhyChooseUs = React.memo(() => {
-  const reasons = [
-    {
-      title: "Passionate",
-      desc: "We are deeply committed to empowering small businesses in rural India, bringing them into the digital age.",
-      icon: <Users className="text-orange-600" />
-    },
-    {
-      title: "Professional",
-      desc: "Our high-standard service in development ensures your business gets the quality it deserves.",
-      icon: <ShieldCheck className="text-orange-600" />
-    },
-    {
-      title: "Support 24/7",
-      desc: "Technology doesn't sleep, and neither do we. Our team is always ready to assist you.",
-      icon: <Clock className="text-orange-600" />
-    }
-  ];
-
-  return (
-    <section className="py-24 bg-black text-white overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="relative">
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-orange-600 rounded-full blur-[100px] opacity-20" />
-            <h2 className="text-4xl md:text-6xl font-bold leading-tight mb-8">
-              Why Teams Choose <span className="text-orange-500">InomTechs.</span>
-            </h2>
-            <p className="text-gray-400 text-lg mb-12">
-              We try to make small business owners expand their businesses online. Our approach is not just about code, it is about community impact.
-            </p>
-            <div className="grid gap-8">
-              {reasons.map((reason, idx) => (
-                <div key={idx} className="flex gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-orange-600/10 flex items-center justify-center">
-                    {reason.icon}
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold mb-1">{reason.title}</h4>
-                    <p className="text-gray-400 leading-relaxed">{reason.desc}</p>
-                  </div>
+            <motion.div className="hero-visual" initial={{ opacity: 0, scale: .94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .9, delay: .08 }}>
+              <motion.div className="brand-orbit" animate={{ rotate: 360 }} transition={{ duration: 34, repeat: Infinity, ease: 'linear' }} aria-hidden="true">
+                <span className="orbit-node orbit-node--1" />
+                <span className="orbit-node orbit-node--2" />
+                <span className="orbit-node orbit-node--3" />
+              </motion.div>
+              <div className="logo-mark-bg" aria-hidden="true"><span /><span /><span /><span /></div>
+              <motion.div className="hero-card hero-card--main" animate={{ y: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}>
+                <div className="hero-card-top"><span>INOM / 2026</span><Globe2 /></div>
+                <div className="hero-card-center">
+                  <img src="/assets/inomtechs-logo.jpg" alt="InomTechs logo" width="200" height="200" />
                 </div>
+                <div className="hero-card-bottom"><span>SOFTWARE</span><span>AI</span><span>DATA</span><span>DIGITAL</span></div>
+              </motion.div>
+              <div className="mini-card mini-card--one"><BrainCircuit /><span>AI Solutions</span></div>
+              <div className="mini-card mini-card--two"><Layers3 /><span>Digital Products</span></div>
+            </motion.div>
+          </div>
+        </section>
+
+        <section className="impact-strip" aria-label={t.impactLabel}>
+          <div className="max-wrap impact-inner">
+            <p>{t.impactLabel}</p>
+            <div className="impact-items">
+              <span><Zap />{t.impactItems[0]}</span>
+              <span><Workflow />{t.impactItems[1]}</span>
+              <span><ShieldCheck />{t.impactItems[2]}</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="services section-pad" id="services">
+          <div className="max-wrap">
+            <div className="section-heading split-heading">
+              <div><p className="eyebrow">{t.capability}</p><h2>{t.capabilityTitle}</h2></div>
+              <p>{t.capabilityText}</p>
+            </div>
+
+            <div className="services-layout">
+              <div className="service-list">
+                {services.map((service, index) => (
+                  <button key={service.id} className={`service-row ${activeService === index ? 'active' : ''}`} onMouseEnter={() => setActiveService(index)} onFocus={() => setActiveService(index)} onClick={() => setActiveService(index)}>
+                    <span className="service-number">{service.number}</span>
+                    <span className="service-title">{service.title[lang]}</span>
+                    <span className="service-arrow"><ArrowUpRight /></span>
+                  </button>
+                ))}
+              </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div key={activeService} className="service-detail" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -18 }} transition={{ duration: .28 }}>
+                  <div className="service-icon">{services[activeService].icon}</div>
+                  <h3>{services[activeService].title[lang]}</h3>
+                  <p>{services[activeService].description[lang]}</p>
+                  <ul>
+                    {services[activeService].points[lang].map(point => <li key={point}><span />{point}</li>)}
+                  </ul>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </section>
+
+        <section className="work section-pad" id="work">
+          <div className="max-wrap">
+            <div className="section-heading work-heading">
+              <p className="eyebrow">{t.workLabel}</p>
+              <h2>{t.workTitle}</h2>
+              <p>{t.workText}</p>
+            </div>
+            <div className="project-stack">
+              {projects.map((project, index) => (
+                <motion.a
+                  className="project-card project-card--live"
+                  key={project.title}
+                  href={project.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: .2 }}
+                  transition={{ duration: .55, delay: index * .04 }}
+                >
+                  <div className="project-index">{project.index}</div>
+                  <div className="project-main">
+                    <div className="project-meta"><p>{project.category[lang]}</p><span className="live-pill"><i />LIVE</span></div>
+                    <h3>{project.title}</h3>
+                    <span>{project.description[lang]}</span>
+                    <strong className="project-link-label">{lang === 'ar' ? 'عرض المشروع' : 'View live project'}<ArrowUpRight size={16} /></strong>
+                  </div>
+                  <div className="project-preview">
+                    <div className="browser-bar"><span/><span/><span/><small>{project.liveUrl.replace('https://', '').replace(/\/$/, '')}</small></div>
+                    <img src={project.screenshotUrl} alt={`${project.title} live website preview`} loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                    <div className="project-preview-fallback"><span>{project.title.slice(0, 2).toUpperCase()}</span><small>{project.category[lang]}</small></div>
+                  </div>
+                  <ArrowUpRight className="project-arrow" />
+                </motion.a>
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-             <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=60&w=400" className="rounded-2xl h-48 sm:h-64 w-full object-cover sm:mt-12" alt="InomTechs creative team" loading="lazy" decoding="async" />
-             <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=60&w=400" className="rounded-2xl h-48 sm:h-64 w-full object-cover" alt="Interactive software workshop" loading="lazy" decoding="async" />
-             <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=60&w=400" className="rounded-2xl h-48 sm:h-64 w-full object-cover sm:mt-4" alt="Successful project completion" loading="lazy" decoding="async" />
-             <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=60&w=400" className="rounded-2xl h-48 sm:h-64 w-full object-cover sm:-mt-8" alt="Data analytics" loading="lazy" decoding="async" />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-});
+        </section>
 
-// --- Request Consultation CTA ---
-const RequestConsultation = React.memo(() => {
-  const { t, i18n } = useTranslation();
-  return (
-    <section className="py-16 bg-orange-600 dark:bg-orange-700 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`flex flex-col md:flex-row items-center justify-between gap-8 text-white ${i18n.language === 'ar' ? 'md:flex-row-reverse' : ''}`}>
-          <div className={`text-center ${i18n.language === 'ar' ? 'md:text-right' : 'md:text-left'}`}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('ready_to_transform')}</h2>
-            <p className="text-lg text-orange-100 max-w-xl">
-              {t('get_free_consultation')}
-            </p>
-          </div>
-          <motion.a
-            href="#contact"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="whitespace-nowrap bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg shadow-2xl hover:bg-orange-50 transition-all flex items-center gap-2"
-          >
-            {t('request_consultation')} <ArrowRight className={i18n.language === 'ar' ? 'rotate-180' : ''} size={22} />
-          </motion.a>
-        </div>
-      </div>
-    </section>
-  );
-});
-
-const Contact = React.memo(() => {
-  const { t, i18n } = useTranslation();
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateEmail(email)) {
-      setEmailError(t('contact_email_valid'));
-      return;
-    }
-    setEmailError('');
-    // Handle form submission logic would go here
-    console.log('Form status: Valid email, proceeding with submission');
-  };
-
-  return (
-    <section id="contact" className="py-24 bg-white dark:bg-black transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-[40px] overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
-          <div className="grid lg:grid-cols-5">
-            <div className="lg:col-span-2 bg-black dark:bg-gray-900 p-8 lg:p-12 text-white">
-              <h3 className="text-3xl font-bold mb-8">{t('get_in_touch')}</h3>
-              <p className="text-gray-400 mb-12">
-                {t('contact_help_text')}
-              </p>
-              
-              <div className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                    <Mail size={18} className="text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">{t('email_us')}</p>
-                    <p className="font-medium">info@inomtechs.com</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                    <Phone size={18} className="text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">{t('call_us')}</p>
-                    <p className="font-medium">+201556783315</p>
-                  </div>
-                </div>
-
-              </div>
-
-              <div className="mt-16 pt-8 border-t border-white/10 flex gap-6">
-                <a href="https://www.facebook.com/share/189hdW8Ds9/" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors"><Facebook size={20} /></a>
-                <a href="https://www.instagram.com/inomtechs26/" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors"><Instagram size={20} /></a>
-                <a href="https://www.linkedin.com/in/inom-techs-36b25a410" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors"><Linkedin size={20} /></a>
-                <a href="https://www.tiktok.com/@inom6776?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors"><Music size={20} /></a>
-              </div>
+        <section className="ai-data section-pad" id="ai-data">
+          <div className="ai-logo-motif" aria-hidden="true"><span/><span/><span/><span/></div>
+          <div className="max-wrap ai-grid">
+            <div className="ai-copy">
+              <p className="eyebrow eyebrow--light">{t.aiLabel}</p>
+              <h2>{t.aiTitle}</h2>
+              <p>{t.aiText}</p>
             </div>
-            
-            <div className="lg:col-span-3 p-8 lg:p-12">
-              <form className="space-y-6" onSubmit={handleSubmit}>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-gray-500 ml-1">{t('full_name')}</label>
-                    <input type="text" required className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder={t('contact_placeholder_name')} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-gray-500 ml-1">{t('email_address')}</label>
-                    <input 
-                      type="email" 
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (emailError) setEmailError('');
-                      }}
-                      className={`w-full bg-white dark:bg-gray-800 border ${emailError ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'} rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors`} 
-                      placeholder="john@example.com" 
-                    />
-                    {emailError && <p className="text-red-500 text-xs mt-1 ml-1 font-bold">{emailError}</p>}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-gray-500 ml-1">{t('service_required')}</label>
-                  <select className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none">
-                    <option>{t('service_web_title')}</option>
-                    <option>{t('service_app_title')}</option>
-                    <option>{t('education_training')}</option>
-                    <option>{t('product_inquiries')}</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-gray-500 ml-1">{t('your_message')}</label>
-                  <textarea rows={4} required className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white focus:outline-none focus:border-orange-500 transition-colors resize-none" placeholder={t('contact_placeholder_msg')}></textarea>
-                </div>
-                <button type="submit" className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 transition-all shadow-lg hover:shadow-orange-200 dark:shadow-none">
-                   {t('send_message')}
-                </button>
-              </form>
+            <div className="ai-cards">
+              <article className="ai-card">
+                <div className="ai-card-number">01</div>
+                <BrainCircuit />
+                <h3>{t.aiCard1Title}</h3>
+                <p>{t.aiCard1Text}</p>
+              </article>
+              <article className="ai-card">
+                <div className="ai-card-number">02</div>
+                <BarChart3 />
+                <h3>{t.aiCard2Title}</h3>
+                <p>{t.aiCard2Text}</p>
+              </article>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-});
+        </section>
 
-const Footer = React.memo(() => {
-  const { t, i18n } = useTranslation();
-  return (
-    <footer className="py-12 bg-white dark:bg-black border-t border-gray-100 dark:border-gray-800 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`flex flex-col md:flex-row justify-between items-center gap-8 ${i18n.language === 'ar' ? 'md:flex-row-reverse' : ''}`}>
-          <div className={i18n.language === 'ar' ? 'text-right' : 'text-left'}>
-            <span className="text-2xl font-bold tracking-tighter dark:text-white">
-              InomTechs<span className="text-orange-600">.</span>
-            </span>
-            <p className="text-gray-400 text-xs mt-2">© 2024 InomTechs Private Limited. {t('footer_rights')}</p>
+        <section className="about section-pad" id="about">
+          <div className="max-wrap about-grid">
+            <div className="about-sticky">
+              <p className="eyebrow">{t.aboutLabel}</p>
+              <h2>{t.aboutTitle}</h2>
+            </div>
+            <div className="about-copy">
+              <p className="lead">{t.aboutText1}</p>
+              <p>{t.aboutText2}</p>
+              <div className="mission-vision">
+                <article><span>01</span><h3>{t.mission}</h3><p>{t.missionText}</p></article>
+                <article><span>02</span><h3>{t.vision}</h3><p>{t.visionText}</p></article>
+              </div>
+            </div>
           </div>
-          
-          <div className={`flex gap-8 text-sm font-medium text-gray-600 dark:text-gray-400 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{t('privacy_policy')}</a>
-            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{t('terms_conditions')}</a>
-            <a href="#" className="hover:text-orange-600 dark:hover:text-orange-500">{t('careers')}</a>
+        </section>
+
+        <section className="marketing-band section-pad">
+          <div className="max-wrap marketing-grid">
+            <div className="marketing-icon"><Target /></div>
+            <div><p className="eyebrow">{t.marketingLabel}</p><h2>{t.marketingTitle}</h2></div>
+            <p>{t.marketingText}</p>
           </div>
+        </section>
 
-          <div className="flex gap-4">
-            <a href="https://www.facebook.com/share/189hdW8Ds9/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors"><Facebook size={18} /></a>
-            <a href="https://www.instagram.com/inomtechs26/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors"><Instagram size={18} /></a>
-            <a href="https://www.linkedin.com/in/inom-techs-36b25a410" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors"><Linkedin size={18} /></a>
-            <a href="https://www.tiktok.com/@inom6776?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-600 transition-colors"><Music size={18} /></a>
+        <section className="contact section-pad" id="contact">
+          <div className="max-wrap contact-box">
+            <div className="contact-mark" aria-hidden="true"><span/><span/><span/><span/></div>
+            <div>
+              <p className="eyebrow eyebrow--light">{t.contactEyebrow}</p>
+              <h2>{t.contactTitle}</h2>
+              <p>{t.contactText}</p>
+            </div>
+            <div className="contact-actions">
+              <a href="mailto:info@inom-techs.com" className="contact-pill"><Mail /><span><small>Email</small>{t.email}</span><ArrowUpRight /></a>
+              <div className="contact-pill"><MapPin /><span><small>Location</small>{t.location}</span></div>
+            </div>
           </div>
-        </div>
-      </div>
-    </footer>
-  );
-});
-
-// --- App ---
-
-export default function App() {
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('darkMode');
-      return saved ? JSON.parse(saved) : false;
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  const toggleDarkMode = () => setDarkMode(!darkMode);
-
-  return (
-    <div className={`min-h-screen text-gray-900 dark:text-gray-100 dark:bg-gray-950 selection:bg-orange-200 selection:text-orange-900 font-sans transition-colors duration-300`}>
-      <header>
-        <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      </header>
-      <main>
-        <Hero />
-        <AboutUs />
-        <Services />
-        <Projects />
-        <Products />
-        <Testimonials />
-        <WhyChooseUs />
-        <RequestConsultation />
-        <Contact />
+        </section>
       </main>
-      <Footer />
-      <Chatbot />
+
+      <footer>
+        <div className="max-wrap footer-grid">
+          <div className="footer-brand"><img src="/assets/inomtechs-logo.jpg" alt="InomTechs" width="200" height="200" /><p>{t.footerText}</p></div>
+          <div className="footer-links">
+            {navItems.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+          </div>
+          <div className="footer-bottom"><span>© {new Date().getFullYear()} InomTechs. {t.rights}</span><a href="mailto:info@inom-techs.com">info@inom-techs.com</a></div>
+        </div>
+      </footer>
     </div>
   );
 }
+
+export default App;

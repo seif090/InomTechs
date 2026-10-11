@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.inomtechs.com/sitemap.xml
+Sitemap: https://inom-techs.com/sitemap.xml
